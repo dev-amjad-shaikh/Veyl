@@ -13,6 +13,9 @@ import { resolve } from 'node:path';
 import { extensionId, launch, serveFixture, stubLanguageModel, waitUntilReady } from '../e2e/harness.mjs';
 
 const OUT = 'store/assets';
+const GUIDE = 'docs/images';
+/** Pass `--dark` to render everything in dark mode, for checking the palette. */
+const SCHEME = process.argv.includes('--dark') ? 'dark' : 'light';
 const SHOTS = 'store/assets/.captures';
 const EXTENSION = resolve('dist-e2e');
 
@@ -70,7 +73,7 @@ async function captureExtension() {
   await mkdir(SHOTS, { recursive: true });
 
   const { server, origin } = await serveFixture();
-  const { context, dispose } = await launch(EXTENSION, { deviceScaleFactor: 2 });
+  const { context, dispose } = await launch(EXTENSION, { deviceScaleFactor: 2, colorScheme: SCHEME });
   try {
     const id = await extensionId(context);
     await waitUntilReady(context);
@@ -92,20 +95,39 @@ async function captureExtension() {
 
     await popup.screenshot({ path: `${SHOTS}/top.png`, clip: { x: 0, y: 0, width: 396, height: 300 } });
 
+    // The user guide uses the panels unadorned, so the pictures match what a
+    // person sees. Everything here comes from the synthetic test fixture — no
+    // real browsing appears in any published image.
+    const guide = async (file, selector) => {
+      await popup.locator(selector).first().screenshot({ path: `${GUIDE}/${file}` });
+    };
+    await popup.screenshot({ path: `${GUIDE}/report-top.png`, clip: { x: 0, y: 0, width: 396, height: 300 } });
+    await guide('services.png', '.section:has(.tag--functional)');
+    await guide('cookies.png', '.section:has-text("Cookies (")');
+    await guide('policy.png', '.section:has(.stances)');
+    await guide('protection.png', '.section:has(.levels)');
+    await guide('may-know.png', '.section:has-text("What they may know")');
+    await guide('unknowns.png', '.section:has-text("What Veyl cannot tell you")');
+
     // Ask a question so the answer is real streamed output, not a placeholder.
     await popup.locator('.ask__chip').first().click();
     await popup.waitForFunction(() => document.querySelector('.ask__answer')?.textContent?.includes('work.'));
     await popup.locator('.section', { hasText: 'Ask Veyl' }).screenshot({ path: `${SHOTS}/ask.png` });
+    await popup.locator('.section', { hasText: 'Ask Veyl' }).screenshot({ path: `${GUIDE}/ask.png` });
 
     // Open the exposure disclosures and one evidence trail beneath them.
     await popup.locator('.dimensions .disclosure__summary').first().click();
     await popup.locator('.statement__evidence summary').first().click();
     await popup.waitForTimeout(300);
     await popup.locator('.section', { hasText: 'Privacy exposure' }).screenshot({ path: `${SHOTS}/exposure.png` });
+    await popup.locator('.section', { hasText: 'Privacy exposure' }).screenshot({ path: `${GUIDE}/exposure.png` });
 
     await popup
       .locator('.section', { hasText: 'What they say vs what they do' })
       .screenshot({ path: `${SHOTS}/consistency.png` });
+    await popup
+      .locator('.section', { hasText: 'What they say vs what they do' })
+      .screenshot({ path: `${GUIDE}/consistency.png` });
 
     const gate = await context.newPage();
     await gate.setViewportSize({ width: 396, height: 620 });
@@ -124,6 +146,14 @@ async function captureExtension() {
     await gate.goto(`chrome-extension://${id}/popup/index.html`);
     await gate.waitForSelector('.gate__title', { timeout: 20_000 });
     await gate.locator('.gate').screenshot({ path: `${SHOTS}/gate.png` });
+    await gate.locator('.gate').screenshot({ path: `${GUIDE}/permission-gate.png` });
+
+    const options = await context.newPage();
+    await options.setViewportSize({ width: 860, height: 1400 });
+    await options.goto(`chrome-extension://${id}/options/index.html`);
+    await options.waitForSelector('.shell__title');
+    await options.waitForTimeout(500);
+    await options.screenshot({ path: `${GUIDE}/settings.png`, fullPage: true });
   } finally {
     await context.close();
     server.close();
@@ -142,7 +172,7 @@ async function render(canvas, html) {
 
 async function compose() {
   const browser = await chromium.launch({ channel: 'chromium', headless: true });
-  const context = await browser.newContext({ deviceScaleFactor: 1 });
+  const context = await browser.newContext({ deviceScaleFactor: 1, colorScheme: SCHEME });
   const canvas = await context.newPage();
 
   for (const panel of PANELS) {
@@ -176,8 +206,9 @@ async function compose() {
     // allowed to pull in file:// images, and the capture would come out empty.
     await canvas.setViewportSize({ width: 1280, height: 800 });
     await render(canvas, html);
-    await canvas.screenshot({ path: `${OUT}/${panel.file}` });
-    console.log(`${OUT}/${panel.file}  1280x800`);
+    const name = SCHEME === 'dark' ? panel.file.replace('.png', '-dark.png') : panel.file;
+    await canvas.screenshot({ path: `${OUT}/${name}` });
+    console.log(`${OUT}/${name}  1280x800`);
   }
 
   const tile = (width, height, markSize, titleSize, subSize) =>
@@ -208,6 +239,7 @@ async function compose() {
 }
 
 await mkdir(OUT, { recursive: true });
+await mkdir(GUIDE, { recursive: true });
 await captureExtension();
 await compose();
 await rm(SHOTS, { recursive: true, force: true });

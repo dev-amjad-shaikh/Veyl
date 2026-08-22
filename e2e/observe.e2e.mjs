@@ -137,7 +137,43 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
   await popup.screenshot({ path: 'evidence/popup.png', fullPage: true });
 
   await askVeyl(context, id);
+  await keyboardAndScreenReader(popup);
 });
+
+/**
+ * The report has to be usable without a mouse and legible without colour.
+ * Level is carried by a word as well as a hue, and the segment graphic is hidden
+ * from assistive technology so it is not read out as meaningless boxes.
+ */
+async function keyboardAndScreenReader(popup) {
+  const first = popup.locator('.dimensions .disclosure__summary').first();
+  await first.focus();
+
+  assert.equal(await first.getAttribute('aria-expanded'), 'false');
+  await popup.keyboard.press('Enter');
+  assert.equal(await first.getAttribute('aria-expanded'), 'true');
+  await popup.keyboard.press('Enter');
+  assert.equal(await first.getAttribute('aria-expanded'), 'false');
+
+  const focusVisible = await popup.evaluate(() => {
+    const element = document.querySelector('.dimensions .disclosure__summary');
+    element.focus();
+    return element.matches(':focus-visible');
+  });
+  assert.ok(focusVisible, 'keyboard focus must be visible');
+
+  assert.equal(await popup.locator('.segments:not([aria-hidden="true"])').count(), 0);
+  for (const text of await popup.locator('.dimensions .pill').allInnerTexts()) {
+    assert.match(text.trim(), /^(NONE SEEN|LOW|MEDIUM|HIGH|UNKNOWN)$/, 'level must be a word, not only a colour');
+  }
+
+  const level = await popup.locator('.levels .level[aria-pressed="true"]').count();
+  assert.equal(level, 1, 'the protection control must expose which level is selected');
+  assert.ok(
+    (await popup.locator('.levels[role="group"]').count()) === 1,
+    'the protection control must be grouped and labelled'
+  );
+}
 
 /**
  * Exercises the Ask Veyl path with Chrome's model stubbed, and checks the thing

@@ -1,3 +1,5 @@
+import { ALL_SITE_PATTERNS } from '../domain/settings';
+
 /**
  * Veyl asks for nothing at install time.
  *
@@ -11,7 +13,7 @@
  * sites Veyl can see is the set you approved, enforced by Chrome rather than by
  * our good intentions.
  */
-const ALL_SITES = ['http://*/*', 'https://*/*'];
+
 const PROBE_ID = 'veyl-probe';
 const COLLECTOR_ID = 'veyl-collector';
 
@@ -25,7 +27,7 @@ export async function currentAccess(): Promise<Access> {
   const origins = granted.origins ?? [];
   return {
     origins,
-    allSites: ALL_SITES.every((pattern) => origins.includes(pattern)),
+    allSites: ALL_SITE_PATTERNS.every((pattern) => origins.includes(pattern)),
   };
 }
 
@@ -51,7 +53,7 @@ export async function hasAccessTo(url: string): Promise<boolean> {
  */
 export async function syncPageScripts(): Promise<void> {
   const { origins, allSites } = await currentAccess();
-  const matches = allSites ? ALL_SITES : origins.filter((o) => o.startsWith('http'));
+  const matches = allSites ? ALL_SITE_PATTERNS : origins.filter((o) => o.startsWith('http'));
 
   const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [PROBE_ID, COLLECTOR_ID] });
   const existingIds = existing.map((script) => script.id);
@@ -90,5 +92,3 @@ export async function syncPageScripts(): Promise<void> {
     await chrome.scripting.registerContentScripts(scripts);
   }
 }
-
-export const ALL_SITE_PATTERNS = ALL_SITES;

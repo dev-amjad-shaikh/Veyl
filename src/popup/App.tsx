@@ -3,19 +3,11 @@ import type { SiteReport, UnavailableReport } from '../domain/types';
 import type { ProtectionLevel } from '../domain/settings';
 import { send } from '../domain/messages';
 import { LEVEL_LABELS } from '../analysis/labels';
-import { Empty } from './ui';
+import { Empty, Mark } from './ui';
 import { AskPanel } from './AskPanel';
-import {
-  Consistency,
-  Cookies,
-  ExposurePanel,
-  MayKnow,
-  PolicyPanel,
-  Protection,
-  Recipients,
-  RightNow,
-  Unknowns,
-} from './sections';
+import { Cookies, ExposurePanel, MayKnow, Recipients, RightNow, Unknowns } from './sections/observed';
+import { Consistency, PolicyPanel } from './sections/declared';
+import { Protection } from './sections/protection';
 
 type State =
   | { kind: 'loading' }
@@ -62,8 +54,8 @@ export function App() {
   return (
     <>
       <header class="header" data-level={report.exposure.overall}>
-        <div class="header__mark" aria-hidden="true">
-          {report.exposure.overall === 'none-seen' ? '✓' : report.exposure.overall === 'unknown' ? '?' : '!'}
+        <div class="header__mark">
+          <Mark title="Veyl" />
         </div>
         <div class="header__text">
           <div class="header__site" title={report.site}>
@@ -75,8 +67,8 @@ export function App() {
       </header>
 
       <RightNow exposure={report.exposure} />
-      <AskPanel report={report} />
       <ExposurePanel exposure={report.exposure} />
+      <AskPanel report={report} />
       <MayKnow exposure={report.exposure} />
       <Consistency findings={report.consistency} />
       <Recipients services={report.services} />

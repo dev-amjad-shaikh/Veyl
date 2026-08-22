@@ -29,7 +29,8 @@ export type Message =
   | { type: 'read-policy'; tabId: number }
   | { type: 'get-history' }
   | { type: 'clear-history' }
-  | { type: 'access-changed' };
+  | { type: 'access-changed' }
+  | { type: 'get-knowledge' };
 
 export interface Responses {
   'page-start': { ok: true };
@@ -42,6 +43,7 @@ export interface Responses {
   'get-history': HistoryTotals;
   'clear-history': HistoryTotals;
   'access-changed': { ok: true };
+  'get-knowledge': { version: string; services: number };
 }
 
 export function send<T extends Message['type']>(

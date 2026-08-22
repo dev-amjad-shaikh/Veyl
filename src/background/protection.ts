@@ -172,36 +172,3 @@ export async function applyProtection(settings: Settings): Promise<void> {
     addRules,
   });
 }
-
-/** What a level actually does, in the words the interface uses. */
-export const PROTECTION_DESCRIPTIONS: Record<ProtectionLevel, { title: string; does: string[]; keeps: string[] }> = {
-  off: {
-    title: 'Watching only',
-    does: ['Veyl explains what happens but changes nothing.'],
-    keeps: ['Every part of the site behaves exactly as the site intended.'],
-  },
-  balanced: {
-    title: 'Protected',
-    does: [
-      'Blocks advertising and ad-measurement services',
-      'Blocks session recording',
-      'Strips campaign tracking codes from links you open',
-      'Sends Global Privacy Control',
-    ],
-    keeps: [
-      'Sign-in, checkout, payments and bot protection are never blocked',
-      'The site’s own analytics and its cookie banner keep working',
-    ],
-  },
-  strict: {
-    title: 'Strict',
-    does: [
-      'Everything in Protected',
-      'Also blocks analytics, tag managers, social embeds and marketing tools',
-    ],
-    keeps: [
-      'Sign-in, checkout, payments and bot protection are never blocked',
-      'Some embedded videos and chat widgets will not load',
-    ],
-  },
-};

@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import type { HistoryTotals } from '../domain/types';
-import type { ProtectionLevel, Settings } from '../domain/settings';
+import { ALL_SITE_PATTERNS, PROTECTION_DESCRIPTIONS, type ProtectionLevel, type Settings } from '../domain/settings';
 import { send } from '../domain/messages';
-import { PROTECTION_DESCRIPTIONS } from '../background/protection';
-import { KNOWLEDGE_VERSION, TRACKER_COUNT } from '../knowledge/graph';
-import { ALL_SITE_PATTERNS } from '../background/permissions';
 import { CATEGORY_LABELS } from '../analysis/labels';
+import { availability, type ModelAvailability } from '../model/language-model';
 
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [history, setHistory] = useState<HistoryTotals | null>(null);
   const [allSites, setAllSites] = useState(false);
+  const [model, setModel] = useState<ModelAvailability | 'checking'>('checking');
+  const [knowledge, setKnowledge] = useState<{ version: string; services: number } | null>(null);
   const [sites, setSites] = useState<string[]>([]);
   const welcome = location.hash === '#welcome';
 
   const refresh = useCallback(async () => {
     setSettings(await send({ type: 'get-settings' }));
+    setKnowledge(await send({ type: 'get-knowledge' }));
     setHistory(await send({ type: 'get-history' }));
     const granted = await chrome.permissions.getAll();
     const origins = granted.origins ?? [];
@@ -25,6 +26,7 @@ export function App() {
 
   useEffect(() => {
     void refresh();
+    void availability().then(setModel);
   }, [refresh]);
 
   const patch = useCallback(
@@ -175,6 +177,19 @@ export function App() {
       </section>
 
       <section class="card">
+        <h2 class="card__title">Ask Veyl</h2>
+        <p class="card__body">
+          Where Chrome offers its built-in on-device model, Veyl can answer questions about a page in your own
+          words. Veyl ships no model and hosts none — Chrome downloads and runs it locally, and your question
+          never leaves this device. The panel appears in the report when Chrome can run it, and stays hidden
+          when it cannot. Everything else in Veyl works either way.
+        </p>
+        <p class="card__body" style="margin-top: 10px">
+          Status on this device: <strong>{MODEL_STATUS[model]}</strong>
+        </p>
+      </section>
+
+      <section class="card">
         <h2 class="card__title">What leaves this device</h2>
         <p class="card__body">Nothing. Written out properly, because it is the whole product:</p>
         <table class="table" style="margin-top: 14px">
@@ -198,8 +213,8 @@ export function App() {
       <section class="card">
         <h2 class="card__title">Where the judgements come from</h2>
         <p class="card__body">
-          Veyl identifies {TRACKER_COUNT} services from a knowledge base compiled from public vendor
-          documentation (version {KNOWLEDGE_VERSION}). Every statement in the interface is labelled{' '}
+          Veyl identifies {knowledge?.services ?? '…'} services from a knowledge base compiled from public
+          vendor documentation (version {knowledge?.version ?? '…'}). Every statement in the interface is labelled{' '}
           <strong>Observed</strong>, <strong>Declared</strong>, <strong>Inferred</strong> or{' '}
           <strong>Unknown</strong>, and can be opened to show what it rests on. A domain Veyl does not
           recognise is reported as unidentified rather than guessed at.
@@ -208,6 +223,15 @@ export function App() {
     </div>
   );
 }
+
+const MODEL_STATUS: Record<ModelAvailability | 'checking', string> = {
+  checking: 'checking…',
+  unsupported: 'this version of Chrome has no built-in model (Chrome 138 or later is needed)',
+  unavailable: 'Chrome has not made a model available on this device',
+  downloadable: 'available — Chrome will download it the first time you ask a question',
+  downloading: 'Chrome is downloading the model now',
+  available: 'ready',
+};
 
 function Row({ what, where }: { what: string; where: string }) {
   return (

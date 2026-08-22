@@ -116,12 +116,27 @@ npm run e2e
 
 A real Chrome, the real built extension, and a page that contacts Google, Meta,
 TikTok, Criteo, Hotjar and Stripe for real. It checks what Veyl saw, what it blocked,
-what it read from the policy, and what the popup actually renders — and captures the
-result to `evidence/`.
+what it read from the policy, what the popup renders, and that the report is usable by
+keyboard — and captures the result to `evidence/`.
+
+```bash
+npm run smoke
+```
+
+Loads real websites twice — once watching only, once protected — and compares the two
+renderings. A site that loses its content when protection is on is the failure this
+catches, because it is the one that shipped once.
+
+## Using it
+
+[`docs/user-guide.md`](docs/user-guide.md) is a short illustrated tour: granting access to
+a site, reading the report, what the levels and provenance tags mean, turning on
+protection, and asking questions.
 
 ## How it is put together
 
-Read [`docs/architecture.md`](docs/architecture.md) first. The parts that a person
+New to the code? [`docs/code-tour.md`](docs/code-tour.md) walks the whole thing in reading
+order. [`docs/architecture.md`](docs/architecture.md) is the shape of it. The parts that a person
 should be able to check for themselves are documented separately and deliberately:
 
 - [`docs/evidence-schema.md`](docs/evidence-schema.md) — everything Veyl records, and for how long
@@ -132,6 +147,7 @@ should be able to check for themselves are documented separately and deliberatel
 - [`docs/roadmap.md`](docs/roadmap.md) — what is built, and what is deliberately not built yet
 - [`PRIVACY.md`](PRIVACY.md) — the privacy policy, in the same plain language as the product
 - [`store/submission.md`](store/submission.md) — every Chrome Web Store field, filled in
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to set up, what to test, and the rule that governs changes
 
 ## Publish it
 

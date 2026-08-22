@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import type { SiteReport } from '../domain/types';
 import { EXPLAINER_INSTRUCTIONS, buildDigest } from '../analysis/digest';
-import { availability, createSession, type ModelAvailability, type Session } from './language-model';
+import { availability, createSession, type ModelAvailability, type Session } from '../model/language-model';
 import { Section } from './ui';
 
 const SUGGESTIONS = [
@@ -58,18 +58,10 @@ export function AskPanel({ report }: { report: SiteReport }) {
     [busy, report]
   );
 
-  if (state === 'checking' || state === 'unsupported') return null;
-
-  if (state === 'unavailable') {
-    return (
-      <Section title="Ask Veyl">
-        <p class="muted">
-          Asking questions in your own words needs Chrome’s on-device model, which this device cannot run. Everything
-          above works without it.
-        </p>
-      </Section>
-    );
-  }
+  // Where Chrome has no model to offer, the popup says nothing at all. A person
+  // reading a privacy report does not need to be told about a feature they
+  // cannot use; the settings page explains it if they go looking.
+  if (state === 'checking' || state === 'unsupported' || state === 'unavailable') return null;
 
   if (state === 'downloadable' || state === 'downloading') {
     return (

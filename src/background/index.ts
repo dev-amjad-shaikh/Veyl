@@ -18,6 +18,7 @@ import { fetchPolicy, guessPolicyUrls } from '../analysis/policy';
 import { collectCookies } from './cookies';
 import { applyProtection } from './protection';
 import { clearHistory, readTotals, recordVisit } from './history';
+import { KNOWLEDGE_VERSION, TRACKER_COUNT } from '../knowledge/graph';
 import { hasAccessTo, originPatternFor, syncPageScripts } from './permissions';
 import { loadSettings, saveSettings } from './store';
 import * as badge from './badge';
@@ -251,6 +252,10 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
       }
       case 'clear-history': {
         sendResponse(await clearHistory());
+        return;
+      }
+      case 'get-knowledge': {
+        sendResponse({ version: KNOWLEDGE_VERSION, services: TRACKER_COUNT });
         return;
       }
       case 'access-changed': {

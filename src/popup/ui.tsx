@@ -57,6 +57,36 @@ export function LevelPill({ level }: { level: ExposureLevel }) {
   );
 }
 
+/**
+ * Four discrete steps, deliberately not a bar that fills continuously. Veyl
+ * reports levels; a sliding bar would read as a score, which is the thing this
+ * product refuses to give.
+ */
+export function Segments({ level }: { level: ExposureLevel }) {
+  return (
+    <span class="segments" data-level={level} aria-hidden="true">
+      <span /><span /><span /><span />
+    </span>
+  );
+}
+
+/** Veyl's mark: the chevron from the extension icon. */
+export function Mark({ title }: { title?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" role={title ? 'img' : 'presentation'} aria-label={title}>
+      <path d="M28 30 L50 74" stroke="currentColor" stroke-width="12" stroke-linecap="round" fill="none" />
+      <path
+        d="M50 74 L72 30"
+        stroke="currentColor"
+        stroke-width="12"
+        stroke-linecap="round"
+        fill="none"
+        opacity="0.55"
+      />
+    </svg>
+  );
+}
+
 export function ConfidencePill({ confidence }: { confidence: Confidence }) {
   return (
     <span class="pill pill--quiet" title="How much of the picture Veyl actually saw">

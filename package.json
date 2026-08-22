@@ -1,6 +1,6 @@
 {
   "name": "veyl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Veyl \u2014 no more unwanted tracking. A real-time privacy interpreter for the web.",
   "type": "module",
@@ -13,7 +13,8 @@
     "e2e": "npm run build && node scripts/build-e2e.mjs && node --test --test-timeout=180000 e2e/*.e2e.mjs",
     "icons": "node scripts/make-icons.mjs",
     "package": "npm run build && node scripts/package.mjs",
-    "store-assets": "node scripts/store-assets.mjs"
+    "store-assets": "node scripts/store-assets.mjs",
+    "smoke": "npm run build && node scripts/build-e2e.mjs && node scripts/smoke.mjs"
   },
   "dependencies": {
     "preact": "^10.27.2",
