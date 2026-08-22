@@ -19,9 +19,9 @@ export function asPlainText(text: string): string {
 
 const SUGGESTIONS = [
   'What should I actually care about here?',
+  'Explain this site’s cookie policy',
   'Who learns the most about me on this page?',
   'What would turning on protection change?',
-  'Explain this page in one sentence',
 ];
 
 export function AskPanel({ report }: { report: SiteReport }) {

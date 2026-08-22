@@ -17,8 +17,9 @@ the browser APIs it touches that are used for fingerprinting and cross-site trac
 **Identifies** who is on the other end, from a curated knowledge base of tracker
 domains, the products that run on them, and the companies that own those products.
 
-**Reads** the site's own published privacy policy — fetched by your browser, parsed on
-your device — and turns it into checkable claims.
+**Reads** the site's own published policies — the privacy policy and the separate cookie
+policy where there is one, fetched by your browser and parsed on your device — and turns
+them into checkable claims.
 
 **Compares** the two. A policy that promises "only strictly necessary cookies before
 you consent" while seven marketing services load before you have chosen anything is a

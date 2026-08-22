@@ -162,12 +162,14 @@ async function readPolicy(tabId: number): Promise<void> {
 
   policyInFlight.add(visit.site);
   try {
-    const candidates = [
-      ...visit.policyLinks.filter((l) => l.kind === 'privacy').map((l) => l.url),
-      ...visit.policyLinks.filter((l) => l.kind === 'cookies').map((l) => l.url),
-      ...guessPolicyUrls(visit.url),
-    ];
-    policyCache.set(visit.site, await fetchPolicy(visit.site, [...new Set(candidates)]));
+    const guessed = guessPolicyUrls(visit.url);
+    const linked = (kind: 'privacy' | 'cookies') =>
+      visit.policyLinks.filter((link) => link.kind === kind).map((link) => link.url);
+    const candidates = {
+      privacy: [...new Set([...linked('privacy'), ...guessed.privacy])],
+      cookies: [...new Set([...linked('cookies'), ...guessed.cookies])],
+    };
+    policyCache.set(visit.site, await fetchPolicy(visit.site, candidates));
   } finally {
     policyInFlight.delete(visit.site);
   }

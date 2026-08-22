@@ -27,8 +27,11 @@ export function htmlToText(html: string): string {
   return html
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<(script|style|noscript|svg|head)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
-    .replace(/<br\s*\/?>/gi, '\n')
+    // Block boundaries are marked with a sentinel rather than a newline, so the
+    // hard wraps inside a paragraph can be collapsed without losing them. Real
+    // policies wrap mid-clause constantly, and splitting there hides the claim.
+    .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\u0000')
+    .replace(/<br\s*\/?>/gi, '\u0000')
     // Inline tags disappear; block tags become a space. Otherwise "your <b>IP</b>."
     // comes out as "your IP ." and every quoted excerpt looks mangled.
     .replace(/<\/?(?:b|i|u|em|strong|span|a|small|sup|sub|code|mark|abbr|cite|q)\b[^>]*>/gi, '')
@@ -39,8 +42,11 @@ export function htmlToText(html: string): string {
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
-    .replace(/[ \t ]+/g, ' ')
-    .replace(/\n\s*\n+/g, '\n')
+    // Collapse every run of whitespace, including the hard wraps inside a
+    // paragraph, then restore the block boundaries the sentinel marked.
+    .replace(/\s+/g, ' ')
+    .replace(/ +([,.;:!?])/g, '$1')
+    .replace(/\s*\u0000[\s\u0000]*/g, '\n')
     .trim();
 }
 
@@ -152,6 +158,30 @@ const PATTERNS: Pattern[] = [
     confidence: 'medium',
   },
   {
+    topic: 'cookies',
+    re: /\bthird[- ]party cookies\b/i,
+    assertion: 'Says third parties set cookies through this site.',
+    confidence: 'high',
+  },
+  {
+    topic: 'cookies',
+    re: /\bcookies?\b[^.]{0,80}\b(?:last|remain|are stored|are retained|expire)\b[^.]{0,60}\b\d+\s*(?:days?|months?|years?)/i,
+    assertion: 'Says how long its cookies last.',
+    confidence: 'high',
+  },
+  {
+    topic: 'cookies',
+    re: /\b(?:you (?:can|may)|to)\b[^.]{0,70}\b(?:manage|change|update|withdraw|reject|refuse|disable|delete)\b[^.]{0,50}\bcookies?\b/i,
+    assertion: 'Explains how to change or refuse cookies.',
+    confidence: 'high',
+  },
+  {
+    topic: 'cookies',
+    re: /\bcookies?\b[^.]{0,80}\bbrowser (?:settings|preferences)\b|\bbrowser (?:settings|preferences)\b[^.]{0,80}\bcookies?\b/i,
+    assertion: 'Points you to your browser settings to control cookies.',
+    confidence: 'medium',
+  },
+  {
     topic: 'consent',
     re: /\b(?:strictly |only )?necessary cookies\b[^.]{0,120}\b(?:before|until|unless)\b[^.]{0,60}\bconsent\b/i,
     assertion: 'Says only necessary cookies are used before you consent.',
@@ -197,6 +227,16 @@ const COLLECTION_CATEGORIES: { label: string; re: RegExp }[] = [
   { label: 'Advertising identifiers', re: /\badvertising (?:id|identifier)s?\b|\bcookie identifiers?\b/i },
   { label: 'Inferences about you', re: /\binferences?\b/i },
   { label: 'Content you provide', re: /\bcontent you (?:upload|submit|post|provide)\b/i },
+];
+
+/** Categories a cookie banner divides its switches into. */
+const COOKIE_CATEGORIES: { label: string; re: RegExp }[] = [
+  { label: 'strictly necessary', re: /\b(?:strictly necessary|essential|required) cookies\b/i },
+  { label: 'functional', re: /\bfunctional(?:ity)? cookies\b|\bpreference cookies\b/i },
+  { label: 'performance', re: /\bperformance cookies\b/i },
+  { label: 'analytics', re: /\b(?:analytics|analytical|statistics|statistical) cookies\b/i },
+  { label: 'advertising', re: /\b(?:advertising|targeting|marketing|advertisement) cookies\b/i },
+  { label: 'social media', re: /\bsocial (?:media )?cookies\b/i },
 ];
 
 const HEDGES = /\b(?:may|might|could|generally|typically|from time to time|such as|including,? but not limited to|as (?:we deem )?necessary|where (?:appropriate|permitted)|among other things)\b/gi;
@@ -245,6 +285,7 @@ export function analyzeText(text: string, site: Site, url: string | null): Polic
   const flat = flatten(text);
   const rights = RIGHTS.filter(({ re }) => re.test(flat)).map(({ right }) => right);
   const collects = COLLECTION_CATEGORIES.filter(({ re }) => re.test(flat)).map(({ label }) => label);
+  const cookieCategories = COOKIE_CATEGORIES.filter(({ re }) => re.test(flat)).map(({ label }) => label);
 
   const hedgeCount = (text.match(HEDGES) ?? []).length;
   const hedgeRate = words > 0 ? (hedgeCount / words) * 1000 : 0;
@@ -291,6 +332,7 @@ export function analyzeText(text: string, site: Site, url: string | null): Polic
   return {
     site,
     url,
+    sources: url ? [{ url, kind: 'privacy' }] : [],
     fetchedAt: Date.now(),
     status: 'ok',
     words,
@@ -306,6 +348,7 @@ export function analyzeText(text: string, site: Site, url: string | null): Polic
       detail: retentionSpecific?.quote ?? retentionVague?.quote ?? null,
     },
     rights,
+    cookieCategories,
     clarity,
     clarityNotes,
   };
@@ -315,6 +358,7 @@ export function emptyAnalysis(site: Site, url: string | null, status: PolicyStat
   return {
     site,
     url,
+    sources: [],
     fetchedAt: Date.now(),
     status,
     words: 0,
@@ -327,49 +371,81 @@ export function emptyAnalysis(site: Site, url: string | null, status: PolicyStat
     targetedAdvertising: 'unstated',
     retention: { stance: 'unstated', detail: null },
     rights: [],
+    cookieCategories: [],
     clarity: 0,
     clarityNotes: [],
   };
 }
 
-export async function fetchPolicy(site: Site, candidates: string[]): Promise<PolicyAnalysis> {
-  for (const url of candidates.slice(0, 4)) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const response = await fetch(url, {
-        credentials: 'omit',
-        redirect: 'follow',
-        signal: controller.signal,
-      });
-      if (!response.ok) continue;
-      const size = Number(response.headers.get('content-length') ?? '0');
-      if (size > MAX_BYTES) return emptyAnalysis(site, url, 'too-large');
-      const html = await response.text();
-      if (html.length > MAX_BYTES) return emptyAnalysis(site, url, 'too-large');
-      const text = htmlToText(html);
-      if (text.split(/\s+/).length < 150) continue;
-      return analyzeText(text, site, url);
-    } catch {
-      continue;
-    } finally {
-      clearTimeout(timer);
-    }
+/** Fetches one document and returns its readable text, or null. */
+async function readDocument(url: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { credentials: 'omit', redirect: 'follow', signal: controller.signal });
+    if (!response.ok) return null;
+    if (Number(response.headers.get('content-length') ?? '0') > MAX_BYTES) return null;
+    const html = await response.text();
+    if (html.length > MAX_BYTES) return null;
+    const text = htmlToText(html);
+    return text.split(/\s+/).length < 150 ? null : text;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
-  return emptyAnalysis(site, candidates[0] ?? null, candidates.length ? 'unreadable' : 'not-found');
+}
+
+async function readFirst(candidates: string[]): Promise<{ url: string; text: string } | null> {
+  for (const url of candidates.slice(0, 3)) {
+    const text = await readDocument(url);
+    if (text) return { url, text };
+  }
+  return null;
+}
+
+/**
+ * Reads what the site publishes about itself.
+ *
+ * Both the privacy policy and the cookie policy are read when both can be found,
+ * because the answers people actually want about cookies — how long each one
+ * lasts, what the categories mean, how to change your mind — usually live in the
+ * second document, and a site that has one rarely repeats it in the first.
+ *
+ * The two texts are analysed together: every claim is scoped to the sentence it
+ * came from, so combining them cannot manufacture a claim neither made.
+ */
+export async function fetchPolicy(
+  site: Site,
+  candidates: { privacy: string[]; cookies: string[] }
+): Promise<PolicyAnalysis> {
+  const [privacy, cookies] = await Promise.all([readFirst(candidates.privacy), readFirst(candidates.cookies)]);
+
+  const sources: PolicyAnalysis['sources'] = [];
+  if (privacy) sources.push({ url: privacy.url, kind: 'privacy' });
+  if (cookies && cookies.url !== privacy?.url) sources.push({ url: cookies.url, kind: 'cookies' });
+
+  if (sources.length === 0) {
+    const tried = [...candidates.privacy, ...candidates.cookies];
+    return emptyAnalysis(site, tried[0] ?? null, tried.length ? 'unreadable' : 'not-found');
+  }
+
+  const combined = [privacy?.text, cookies && cookies.url !== privacy?.url ? cookies.text : null]
+    .filter(Boolean)
+    .join('\n\n');
+
+  return { ...analyzeText(combined, site, sources[0]!.url), sources };
 }
 
 /** Conventional locations to try when the page links to no policy. */
-export function guessPolicyUrls(pageUrl: string): string[] {
+export function guessPolicyUrls(pageUrl: string): { privacy: string[]; cookies: string[] } {
   try {
     const origin = new URL(pageUrl).origin;
-    return [
-      `${origin}/privacy`,
-      `${origin}/privacy-policy`,
-      `${origin}/legal/privacy`,
-      `${origin}/en/privacy`,
-    ];
+    return {
+      privacy: [`${origin}/privacy`, `${origin}/privacy-policy`, `${origin}/legal/privacy`],
+      cookies: [`${origin}/cookie-policy`, `${origin}/cookies`, `${origin}/legal/cookies`],
+    };
   } catch {
-    return [];
+    return { privacy: [], cookies: [] };
   }
 }

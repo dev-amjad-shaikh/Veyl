@@ -10,11 +10,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export async function serveFixture() {
-  const index = await readFile('e2e/fixture/index.html');
-  const privacy = await readFile('e2e/fixture/privacy.html');
+  const [index, privacy, cookies] = await Promise.all([
+    readFile('e2e/fixture/index.html'),
+    readFile('e2e/fixture/privacy.html'),
+    readFile('e2e/fixture/cookies.html'),
+  ]);
+  const pages = [
+    [/^\/privacy/, privacy],
+    [/^\/cookie/, cookies],
+  ];
   const server = createServer((req, res) => {
+    const page = pages.find(([pattern]) => pattern.test(req.url ?? ''))?.[1] ?? index;
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(req.url?.startsWith('/privacy') ? privacy : index);
+    res.end(page);
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   return { server, port: server.address().port, origin: `http://shop.example:${server.address().port}` };

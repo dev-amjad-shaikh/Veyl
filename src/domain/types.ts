@@ -337,6 +337,7 @@ export interface PrivacyExposure {
 // ---------------------------------------------------------------------------
 
 export type PolicyTopic =
+  | 'cookies'
   | 'collection'
   | 'sharing'
   | 'sale'
@@ -363,7 +364,14 @@ export type PolicyStatus = 'ok' | 'not-found' | 'unreadable' | 'too-large' | 'er
 
 export interface PolicyAnalysis {
   site: Site;
+  /** The primary document, kept for display. */
   url: string | null;
+  /**
+   * Every document Veyl read. Most sites keep the detail people actually ask
+   * about — how long each cookie lasts, how to change your mind — in a separate
+   * cookie policy, so both are read when both can be found.
+   */
+  sources: { url: string; kind: 'privacy' | 'cookies' }[];
   fetchedAt: number;
   status: PolicyStatus;
   words: number;
@@ -376,6 +384,8 @@ export interface PolicyAnalysis {
   targetedAdvertising: Stance;
   retention: { stance: Stance; detail: string | null };
   rights: string[];
+  /** Cookie categories the policy names, e.g. "strictly necessary", "advertising". */
+  cookieCategories: string[];
   /** 0–100 internal measure of how clearly the policy is written. */
   clarity: number;
   clarityNotes: string[];

@@ -108,6 +108,21 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
   assert.ok(withPolicy.policy.rights.includes('delete your data'));
   assert.ok(withPolicy.policy.claims.length >= 6, 'the extractor should find the substantive claims');
 
+  // Both documents, because the answers people want about cookies live in the second.
+  assert.deepEqual(
+    withPolicy.policy.sources.map((source) => source.kind),
+    ['privacy', 'cookies'],
+    'the cookie policy must be read as well as the privacy policy'
+  );
+  assert.deepEqual(withPolicy.policy.cookieCategories, [
+    'strictly necessary',
+    'functional',
+    'analytics',
+    'advertising',
+  ]);
+  const cookieClaims = withPolicy.policy.claims.filter((claim) => claim.topic === 'cookies');
+  assert.ok(cookieClaims.length >= 3, `expected cookie-specific claims, got ${cookieClaims.length}`);
+
   // --- say vs do -----------------------------------------------------------
   const discrepancy = withPolicy.consistency.find((f) => f.severity === 'discrepancy');
   assert.ok(discrepancy, 'trackers fired before consent while the policy promised necessary-only');

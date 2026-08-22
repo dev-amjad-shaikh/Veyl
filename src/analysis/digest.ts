@@ -17,7 +17,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 
 const MAX_SERVICES = 12;
 const MAX_COOKIES = 10;
-const MAX_CLAIMS = 6;
+const MAX_CLAIMS = 8;
 
 export function buildDigest(report: SiteReport): string {
   const { exposure, policy } = report;
@@ -99,9 +99,18 @@ export function buildDigest(report: SiteReport): string {
       `- Targeted advertising: ${policy.targetedAdvertising}`,
       `- States a retention period: ${policy.retention.stance}`,
       `- Rights offered: ${policy.rights.length > 0 ? policy.rights.join(', ') : 'none found'}`,
-      `- Length: about ${policy.readingMinutes} minutes of reading`
+      `- Length: about ${policy.readingMinutes} minutes of reading`,
+      `- Documents read: ${policy.sources.map((source) => source.kind).join(' and ') || 'none'}`
     );
-    for (const claim of policy.claims.slice(0, MAX_CLAIMS)) {
+    if (policy.cookieCategories.length > 0) {
+      lines.push(`- Cookie categories it names: ${policy.cookieCategories.join(', ')}`);
+    }
+    // Cookies and consent first: they are what people ask about.
+    const priority: Record<string, number> = { cookies: 0, consent: 1 };
+    const ordered = [...policy.claims].sort(
+      (a, b) => (priority[a.topic] ?? 2) - (priority[b.topic] ?? 2)
+    );
+    for (const claim of ordered.slice(0, MAX_CLAIMS)) {
       lines.push(`- ${claim.assertion} Quote: "${claim.quote}"`);
     }
   } else {

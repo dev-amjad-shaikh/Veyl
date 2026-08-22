@@ -37,13 +37,27 @@ export function PolicyPanel({ policy, pending }: { policy: PolicyAnalysis | null
   }
 
   return (
-    <Section title="What the site says" aside={<span class="fineprint">{policy.readingMinutes} min read</span>}>
+    <Section
+      title="What the site says"
+      aside={
+        <span class="fineprint">
+          {policy.sources.length > 1 ? 'privacy + cookie policy · ' : ''}
+          {policy.readingMinutes} min read
+        </span>
+      }
+    >
       <div class="stances">
         <Stance label="Sells your data" value={policy.sells} invert />
         <Stance label="Shares with advertisers" value={policy.sharesForAdvertising} />
         <Stance label="Targeted advertising" value={policy.targetedAdvertising} />
         <Stance label="Says how long it keeps data" value={policy.retention.stance} good />
       </div>
+
+      {policy.cookieCategories.length > 0 && (
+        <p class="muted" style="margin-bottom: 10px">
+          It divides its cookies into: {policy.cookieCategories.join(', ')}.
+        </p>
+      )}
 
       {policy.collects.length > 0 && (
         <Disclosure name="What it says it collects" meta={policy.collects.length}>
@@ -79,10 +93,18 @@ export function PolicyPanel({ policy, pending }: { policy: PolicyAnalysis | null
             </li>
           ))}
         </ul>
-        {policy.url && (
+        {policy.sources.length > 0 && (
           <p class="fineprint">
-            Read from <a class="linkish" href={policy.url} target="_blank" rel="noreferrer noopener">{policy.url}</a> by your
-            browser. Veyl has no server; nothing about this was sent anywhere.
+            Read by your browser from{' '}
+            {policy.sources.map((source, index) => (
+              <span key={source.url}>
+                {index > 0 && ' and '}
+                <a class="linkish" href={source.url} target="_blank" rel="noreferrer noopener">
+                  the {source.kind === 'cookies' ? 'cookie policy' : 'privacy policy'}
+                </a>
+              </span>
+            ))}
+            . Veyl has no server; nothing about this was sent anywhere.
           </p>
         )}
       </Disclosure>

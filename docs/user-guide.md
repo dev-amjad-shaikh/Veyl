@@ -102,8 +102,9 @@ blocks them.
 
 ![A discrepancy between policy and behaviour](images/consistency.png)
 
-Veyl fetches the site's own privacy policy — your browser does the fetching, and it is
-read on your device — and checks it against what actually happened.
+Veyl fetches the site's own policies — the privacy policy and, where one exists, the
+separate cookie policy. Your browser does the fetching and they are read on your device.
+Veyl then checks what they say against what actually happened.
 
 - **Possible discrepancy** — the policy makes a promise the behaviour contradicts.
 - **Worth knowing** — not a contradiction, but something you would want to know.
@@ -171,6 +172,12 @@ nothing needed for sign-in or checkout was touched.
 
 Where Chrome provides its built-in on-device model, you can ask about the page in your
 own words. Chrome runs the model locally; your question never leaves your computer.
+
+**"Explain this site's cookie policy"** is the one most people want. Veyl reads both the
+privacy policy and the separate cookie policy where a site has one — which is usually
+where the answers actually live — so it can tell you the categories the site uses, how
+long its cookies last, who else sets them, and how to change your mind. It will also
+say where that account differs from what it watched happen.
 
 The model is shown a summary of the findings already on your screen — never the page
 address, never the page content — and it is there to phrase evidence, not to decide
