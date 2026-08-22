@@ -1,0 +1,26 @@
+{
+  "name": "veyl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Veyl \u2014 no more unwanted tracking. A real-time privacy interpreter for the web.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/build-tests.mjs && node --test tests/*.test.mjs",
+    "e2e": "npm run build && node scripts/build-e2e.mjs && node --test --test-timeout=180000 e2e/*.e2e.mjs",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "dependencies": {
+    "preact": "^10.27.2",
+    "tldts": "^7.0.20"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.28",
+    "esbuild": "^0.25.10",
+    "playwright": "^1.56.0",
+    "typescript": "^5.9.3"
+  }
+}

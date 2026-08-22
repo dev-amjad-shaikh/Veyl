@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Northwind Supply — Trail Runner 400</title>
+    <style>
+      body { font: 16px/1.6 -apple-system, system-ui, sans-serif; margin: 0; color: #16181d; }
+      main { max-width: 720px; margin: 0 auto; padding: 48px 24px 160px; }
+      h1 { font-size: 30px; margin: 0 0 8px; }
+      .price { font-size: 22px; color: #1a8f4d; }
+      footer { border-top: 1px solid #e2e5ea; padding: 24px; text-align: center; font-size: 13px; }
+      #onetrust-banner-sdk {
+        position: fixed; inset: auto 0 0 0; background: #14161b; color: #fff;
+        padding: 18px 24px; display: flex; gap: 16px; align-items: center; justify-content: center;
+      }
+      #onetrust-banner-sdk button { padding: 8px 18px; border-radius: 6px; border: 0; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Trail Runner 400</h1>
+      <p class="price">£129.00</p>
+      <p>A test page that loads the same tracking services a real shop does, so Veyl can be checked against real behaviour.</p>
+      <canvas id="fp" width="220" height="60"></canvas>
+    </main>
+
+    <div id="onetrust-banner-sdk">
+      <span>We use cookies to improve your experience.</span>
+      <button id="accept">Accept all</button>
+    </div>
+
+    <footer>
+      <a href="/privacy">Privacy Policy</a> · <a href="/privacy">Cookie Policy</a>
+    </footer>
+
+    <script>
+      // Identifiers written the way real tag managers write them.
+      document.cookie = '_ga=GA1.1.1839274650.1724284800; max-age=63072000; path=/';
+      document.cookie = '_fbp=fb.1.1724284800123.9f8c1e2b4a7d6053; max-age=7776000; path=/';
+      document.cookie = 'sessionid=short; path=/';
+      localStorage.setItem('_hjSessionUser_9921', '3f2504e04f8911d39a0c0305e82c3301');
+      localStorage.setItem('theme', 'dark');
+
+      // Canvas fingerprinting: draw text, read the pixels back.
+      const ctx = document.getElementById('fp').getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('Veyl fingerprint probe \u{1F510}', 2, 15);
+      ctx.getImageData(0, 0, 220, 60);
+      document.getElementById('fp').toDataURL();
+
+      // Real third-party requests. Whether they succeed is irrelevant — the
+      // point is that the browser reached out to these companies.
+      const load = (src) => { const s = document.createElement('script'); s.async = true; s.src = src; document.head.appendChild(s); };
+      load('https://www.google-analytics.com/analytics.js');
+      load('https://www.googletagmanager.com/gtag/js?id=G-TEST');
+      load('https://connect.facebook.net/en_US/fbevents.js');
+      load('https://static.hotjar.com/c/hotjar-1234567.js?sv=6');
+      load('https://securepubads.g.doubleclick.net/tag/js/gpt.js');
+      load('https://js.stripe.com/v3/');
+      load('https://static.criteo.net/js/ld/ld.js');
+      new Image().src = 'https://www.facebook.com/tr?id=1234567890&ev=PageView';
+      new Image().src = 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST';
+
+      document.getElementById('accept').addEventListener('click', () => {
+        document.getElementById('onetrust-banner-sdk').remove();
+      });
+    </script>
+  </body>
+</html>
