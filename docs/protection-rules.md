@@ -10,13 +10,19 @@ knowledge graph in `src/background/protection.ts`.
 |---|---|
 | **Watching only** | Nothing. Veyl explains and changes nothing. |
 | **Protected** (default) | Advertising, ad measurement, session recording. Strips campaign tracking codes from links you open. Sends Global Privacy Control. |
-| **Strict** | Also analytics, tag managers, social embeds, personalisation and marketing tools. Some embedded videos and chat widgets will not load. |
+| **Strict** | Also analytics, tag managers, social tracking, personalisation and marketing tools. Some chat widgets will not load. Embedded video is kept — it is the content you came for. |
 
 Any site can override the default, in either direction, from the Veyl icon.
 
 ## What can never be blocked
 
-Never, at any level, no exceptions and no user override:
+**A page's own requests.** Every block rule carries `domainType: 'thirdParty'`, so a
+site is never prevented from loading its own scripts, styles or images. This is not a
+nicety: 0.1.0 shipped without it, and visiting a company that also runs a tracker —
+facebook.com, reddit.com, x.com — delivered the HTML and blocked everything else, which
+is a blank page.
+
+**Anything a site needs to function**, at any level, with no user override:
 
 - sign-in and identity
 - payments
@@ -24,10 +30,21 @@ Never, at any level, no exceptions and no user override:
 - consent management (the cookie banner itself)
 - content delivery and site infrastructure
 
-This is structural rather than a promise in the interface. `blockableDomains()` filters
-these categories out before a rule can be generated, and two tests fail loudly if a
-functional service ever becomes blockable. A privacy tool that breaks your checkout has
-not protected you.
+**A tracker company's own website and CDN.** Meta reaches you through
+`connect.facebook.net` *and* `facebook.com`; only the first is safe to block, because
+the second is somewhere people go on purpose. Entries mark those domains `neverBlock`,
+and `blockableDomains()` drops them. Veyl still reports everything it sees either way.
+
+Where sparing the website would also spare the tracker, the endpoint is blocked by path
+instead: `||facebook.com/tr` is Meta's pixel, and blocking it leaves embedded Facebook
+content working. Only endpoints Veyl is certain about are listed — a wrong guess here
+breaks a page, so the list is short by design.
+
+This is structural rather than a promise in the interface. Four tests fail loudly if a
+functional service becomes blockable, if a block rule loses `domainType`, if a
+destination domain enters the block list, or if these exclusions quietly gut the block
+list. `e2e/protection.e2e.mjs` loads a real page on a blocked domain in a real Chrome and
+checks its own scripts still run.
 
 Domains that serve several purposes at once — `google.com` carries both reCAPTCHA and
 ad conversion pixels — are excluded from blocking entirely. Veyl can *tell them apart*
@@ -56,5 +73,5 @@ Veyl does not guess. When Chrome refuses a request on its behalf, `webRequest`
 ## Rule shape
 
 Rules use `initiatorDomains` / `excludedInitiatorDomains` so one rule covers every site
-rather than one rule per site. With ~170 blockable domains and per-site overrides, the
-dynamic rule count stays at four regardless of how many sites you customise.
+rather than one rule per site. With ~150 blockable domains and per-site overrides, the
+dynamic rule count stays at five regardless of how many sites you customise.

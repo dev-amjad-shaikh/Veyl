@@ -104,6 +104,20 @@ export interface TrackerEntry {
    * entries, which is how google.com/recaptcha is told apart from google.com/pagead.
    */
   urlIncludes?: string[];
+  /**
+   * Domains that are also a real website or the CDN serving its content, and so
+   * must never be blocked even though this entry is a tracker. Meta reaches you
+   * through connect.facebook.net *and* facebook.com; only the first is safe to
+   * block. Veyl still reports everything it sees either way.
+   */
+  neverBlock?: string[];
+  /**
+   * Tracking endpoints on a domain that is otherwise unsafe to block wholesale.
+   * Sparing facebook.com keeps embeds working but would also spare Meta's pixel,
+   * so the pixel's own path is blocked instead. declarativeNetRequest urlFilter
+   * syntax; only endpoints Veyl is certain about belong here.
+   */
+  blockUrlFilters?: string[];
   /** Product name as a person would recognise it, e.g. "Meta Pixel". */
   name: string;
   org: string;

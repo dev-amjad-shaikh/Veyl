@@ -20,7 +20,7 @@ export async function serveFixture() {
   return { server, port: server.address().port, origin: `http://shop.example:${server.address().port}` };
 }
 
-export async function launch(extensionDir, options = {}) {
+export async function launch(extensionDir, { hosts = ['shop.example'], ...options } = {}) {
   const profile = await mkdtemp(join(tmpdir(), 'veyl-'));
   const context = await chromium.launchPersistentContext(profile, {
     channel: 'chromium',
@@ -29,7 +29,7 @@ export async function launch(extensionDir, options = {}) {
     args: [
       `--disable-extensions-except=${extensionDir}`,
       `--load-extension=${extensionDir}`,
-      '--host-resolver-rules=MAP shop.example 127.0.0.1',
+      `--host-resolver-rules=${hosts.map((host) => `MAP ${host} 127.0.0.1`).join(', ')}`,
     ],
   });
   return { context, profile, dispose: () => rm(profile, { recursive: true, force: true }) };

@@ -7,7 +7,7 @@
  */
 import type { Category, CookieKnowledge, Organization, TrackerEntry } from '../domain/types';
 import { FUNCTIONAL_CATEGORIES } from '../domain/types';
-import { hostSuffixes, siteOf } from '../domain/site';
+import { hostSuffixes } from '../domain/site';
 import organizationsData from './organizations.json';
 import trackersData from './trackers.json';
 import cookiesData from './cookies.json';
@@ -81,19 +81,42 @@ export function isFunctional(category: Category): boolean {
   return FUNCTIONAL_CATEGORIES.includes(category);
 }
 
-/** Domains Veyl would block under full protection: tracking that no page needs. */
+/**
+ * Domains Veyl would block under full protection: tracking that no page needs.
+ *
+ * Three things are excluded, and each exclusion exists because including it
+ * would break a page a person was trying to use:
+ *   - anything a site needs to function (sign-in, payment, bot checks, CDNs);
+ *   - domains shared between a tracker and something else, told apart only by
+ *     URL, where a domain-wide block would catch the wrong thing;
+ *   - a tracker's own website and the CDN serving its content.
+ */
 export function blockableDomains(): { domain: string; entryId: string; category: Category }[] {
   const out: { domain: string; entryId: string; category: Category }[] = [];
   for (const entry of trackers) {
     if (isFunctional(entry.category)) continue;
-    if (entry.urlIncludes) continue; // shared domains are unsafe to block wholesale
+    if (entry.urlIncludes) continue;
     if (entry.category === 'unknown' || entry.category === 'hosting') continue;
     for (const domain of entry.domains) {
-      if (siteOf(domain) !== domain) continue; // host-scoped entries are ambiguous to block
+      if (entry.neverBlock?.includes(domain)) continue;
       out.push({ domain, entryId: entry.id, category: entry.category });
     }
   }
   return out;
+}
+
+/** Specific tracking endpoints to block on domains that must otherwise stay reachable. */
+export function blockableUrlFilters(): { filter: string; entryId: string; category: Category }[] {
+  return trackers
+    .filter((entry) => entry.blockUrlFilters && !isFunctional(entry.category))
+    .flatMap((entry) =>
+      entry.blockUrlFilters!.map((filter) => ({ filter, entryId: entry.id, category: entry.category }))
+    );
+}
+
+/** Every domain any entry has marked as unsafe to block. */
+export function neverBlockedDomains(): Set<string> {
+  return new Set(trackers.flatMap((entry) => entry.neverBlock ?? []));
 }
 
 export const allTrackers = trackers;

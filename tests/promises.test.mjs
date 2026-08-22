@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   FUNCTIONAL_CATEGORIES,
   blockableDomains,
+  neverBlockedDomains,
   buildRules,
   identifyRequest,
   identifyCookie,
@@ -36,6 +37,59 @@ test('every payment, sign-in, bot-protection and consent service is excluded fro
   }
 });
 
+/**
+ * A page's own requests must never be blocked. Without this, visiting a company
+ * that also runs a tracker — facebook.com, reddit.com, x.com — blocked that
+ * site's own scripts and left a blank page. Checking the category alone missed
+ * it, because the category was right and the domain was the problem.
+ */
+test('a site is never blocked from loading its own resources', () => {
+  for (const level of ['balanced', 'strict']) {
+    const rules = buildRules({ ...DEFAULT_SETTINGS, protection: level });
+    for (const rule of rules.filter((r) => r.action.type === 'block')) {
+      assert.equal(
+        rule.condition.domainType,
+        'thirdParty',
+        `at "${level}", a block rule could match a page's own requests`
+      );
+    }
+  }
+});
+
+test('a tracker company’s own website and CDN are never blocked', () => {
+  const blockable = new Set(blockableDomains().map((d) => d.domain));
+  const destinations = [
+    'facebook.com', 'instagram.com', 'x.com', 'twitter.com', 't.co', 'tiktok.com',
+    'reddit.com', 'pinterest.com', 'linkedin.com', 'youtube.com', 'snapchat.com',
+    'spotify.com', 'vimeo.com', 'yahoo.com', 'adobe.com', 'yandex.ru', 'bing.com',
+    'twimg.com', 'fbcdn.net', 'ytimg.com', 'licdn.com', 'pinimg.com', 'scdn.co',
+    'cdninstagram.com', 'redditstatic.com', 'vimeocdn.com', 'tiktokcdn.com', 'yimg.com',
+  ];
+  for (const domain of destinations) {
+    assert.ok(!blockable.has(domain), `${domain} is somewhere a person goes on purpose; blocking it breaks that page`);
+  }
+});
+
+test('nothing marked unsafe to block is blockable', () => {
+  const blockable = new Set(blockableDomains().map((d) => d.domain));
+  for (const domain of neverBlockedDomains()) {
+    assert.ok(!blockable.has(domain), `${domain} is marked neverBlock but is still in the block list`);
+  }
+});
+
+test('excluding those domains did not quietly disable tracker blocking', () => {
+  const blockable = new Set(blockableDomains().map((d) => d.domain));
+  // The precise endpoints, kept while the company's website is spared.
+  for (const endpoint of [
+    'connect.facebook.net', 'analytics.tiktok.com', 'ct.pinterest.com',
+    'px.ads.linkedin.com', 'ads-twitter.com', 'mc.yandex.ru',
+    'doubleclick.net', 'criteo.net', 'adnxs.com', 'hotjar.com', 'clarity.ms',
+  ]) {
+    assert.ok(blockable.has(endpoint), `${endpoint} should still be blocked`);
+  }
+  assert.ok(blockable.size > 120, `expected a substantial block list, got ${blockable.size}`);
+});
+
 test('protection off means no blocking rules at all', () => {
   const rules = buildRules({ ...DEFAULT_SETTINGS, protection: 'off', globalPrivacyControl: false });
   assert.equal(rules.filter((r) => r.action.type === 'block').length, 0);
@@ -62,8 +116,14 @@ test('a single site can be protected while the global default is off', () => {
     perSite: { 'shop.example': 'balanced' },
   });
   const blocking = rules.filter((r) => r.action.type === 'block');
-  assert.equal(blocking.length, 1);
-  assert.deepEqual(blocking[0].condition.initiatorDomains, ['shop.example']);
+  assert.ok(blocking.length > 0, 'the one protected site should still be protected');
+  for (const rule of blocking) {
+    assert.deepEqual(
+      rule.condition.initiatorDomains,
+      ['shop.example'],
+      'a site left at the default must not be affected by another site’s choice'
+    );
+  }
 });
 
 test('shared domains are told apart by request path, not guessed', () => {

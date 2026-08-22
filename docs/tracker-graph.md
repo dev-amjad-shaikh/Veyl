@@ -77,6 +77,13 @@ Categories in `FUNCTIONAL_CATEGORIES` (`cdn`, `hosting`, `authentication`, `paym
 `fraud-prevention`, `consent-management`) are never counted as tracking and can never
 be blocked. Choosing a category is therefore a safety decision, not a taxonomy one.
 
+`neverBlock` is the second safety decision. List any domain that is also a website
+people visit on purpose, or the CDN that serves its content — `facebook.com`,
+`reddit.com`, `twimg.com`. Veyl will still identify and report the tracker; it just will
+not block that domain, because blocking it breaks a page someone was using. Where the
+tracker has a distinct endpoint on such a domain, put the path in `blockUrlFilters`
+instead, and only when you are certain of it.
+
 ## Provenance of the data itself
 
 Compiled by hand from public vendor documentation. No third-party blocklist is

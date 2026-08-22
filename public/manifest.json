@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Veyl \u2014 Privacy Agent for the Web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Veyl shows you what a website is actually doing with your data, in plain language, without ever sending your browsing anywhere.",
   "minimum_chrome_version": "121",
   "icons": {

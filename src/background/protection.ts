@@ -13,13 +13,21 @@
  */
 import type { Category } from '../domain/types';
 import type { ProtectionLevel, Settings } from '../domain/settings';
-import { blockableDomains } from '../knowledge/graph';
+import { blockableDomains, blockableUrlFilters } from '../knowledge/graph';
 
 const RULE_BALANCED = 1;
 const RULE_STRICT = 2;
 const RULE_PARAMS = 3;
 const RULE_GPC = 4;
-const ALL_RULE_IDS = [RULE_BALANCED, RULE_STRICT, RULE_PARAMS, RULE_GPC];
+/** One rule per tracking endpoint that has to be matched by path rather than domain. */
+const RULE_ENDPOINT_BASE = 100;
+const ALL_RULE_IDS = [
+  RULE_BALANCED,
+  RULE_STRICT,
+  RULE_PARAMS,
+  RULE_GPC,
+  ...Array.from({ length: 50 }, (_, i) => RULE_ENDPOINT_BASE + i),
+];
 
 /** Blocked at "balanced" and above: tracking whose only purpose is to follow you. */
 const BALANCED_CATEGORIES: Category[] = ['advertising', 'session-replay'];
@@ -67,12 +75,18 @@ export function buildRules(settings: Settings): chrome.declarativeNetRequest.Rul
 
   const blockAction = { type: 'block' as const };
 
+  // A page's own requests are never blocked, whatever the domain is known for.
+  // Without this, visiting a company that also runs a tracker — facebook.com,
+  // reddit.com, x.com — blocks that site's own scripts and leaves a blank page.
+  const thirdPartyOnly = { domainType: 'thirdParty' as const };
+
   if (global !== 'off' || balancedOrBetterSites.length > 0) {
     rules.push({
       id: RULE_BALANCED,
       priority: 1,
       action: blockAction,
       condition: {
+        ...thirdPartyOnly,
         requestDomains: balancedDomains,
         ...(global === 'off'
           ? { initiatorDomains: balancedOrBetterSites }
@@ -83,12 +97,34 @@ export function buildRules(settings: Settings): chrome.declarativeNetRequest.Rul
     });
   }
 
+  // Endpoints on domains that must stay reachable: facebook.com serves the page
+  // you came for and the pixel that reports you, and only one of those is blocked.
+  if (global !== 'off' || balancedOrBetterSites.length > 0) {
+    blockableUrlFilters().forEach(({ filter }, index) => {
+      rules.push({
+        id: RULE_ENDPOINT_BASE + index,
+        priority: 3,
+        action: blockAction,
+        condition: {
+          ...thirdPartyOnly,
+          urlFilter: filter,
+          ...(global === 'off'
+            ? { initiatorDomains: balancedOrBetterSites }
+            : offSites.length
+              ? { excludedInitiatorDomains: offSites }
+              : {}),
+        },
+      });
+    });
+  }
+
   if (global === 'strict' || strictSites.length > 0) {
     rules.push({
       id: RULE_STRICT,
       priority: 1,
       action: blockAction,
       condition: {
+        ...thirdPartyOnly,
         requestDomains: strictDomains,
         ...(global === 'strict'
           ? nonStrictSites.length

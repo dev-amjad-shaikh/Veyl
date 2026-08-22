@@ -1,5 +1,5 @@
 /** Everything under test that does not touch a Chrome API, bundled for node:test. */
-export { identifyRequest, identifyCookie, blockableDomains, allTrackers, isFunctional } from '../src/knowledge/graph';
+export { identifyRequest, identifyCookie, blockableDomains, neverBlockedDomains, allTrackers, isFunctional } from '../src/knowledge/graph';
 export { buildRules, PROTECTION_DESCRIPTIONS } from '../src/background/protection';
 export { assessExposure } from '../src/analysis/exposure';
 export { buildInventory } from '../src/analysis/inventory';
