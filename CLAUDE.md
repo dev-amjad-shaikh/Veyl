@@ -10,7 +10,7 @@ npm run build      # → dist/  (load this at chrome://extensions)
 npm run watch      # rebuild on change
 npm run typecheck
 npm test           # behavioural tests over the product's promises
-npm run e2e        # real Chrome + real trackers; writes evidence/
+npm run e2e        # real Chrome + real trackers, with screenshots
 ```
 
 ## The rule that matters

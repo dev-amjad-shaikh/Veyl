@@ -118,7 +118,7 @@ npm run e2e
 A real Chrome, the real built extension, and a page that contacts Google, Meta,
 TikTok, Criteo, Hotjar and Stripe for real. It checks what Veyl saw, what it blocked,
 what it read from the policy, what the popup renders, and that the report is usable by
-keyboard — and captures the result to `evidence/`.
+keyboard — and writes screenshots of the result for you to look at.
 
 ```bash
 npm run smoke
@@ -147,20 +147,7 @@ should be able to check for themselves are documented separately and deliberatel
 - [`docs/privacy-boundary.md`](docs/privacy-boundary.md) — the line between this device and everywhere else
 - [`docs/roadmap.md`](docs/roadmap.md) — what is built, and what is deliberately not built yet
 - [`PRIVACY.md`](PRIVACY.md) — the privacy policy, in the same plain language as the product
-- [`store/submission.md`](store/submission.md) — every Chrome Web Store field, filled in
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to set up, what to test, and the rule that governs changes
-
-## Publish it
-
-```bash
-npm run package
-```
-
-Builds and zips `dist/` into `veyl-<version>.zip` for the Chrome Web Store, refusing to
-package a build that has drifted from source. `npm run store-assets` regenerates the
-listing images by capturing the extension actually running against the test fixture.
-[`store/submission.md`](store/submission.md) has every dashboard field written out,
-including the permission justifications and the data disclosure.
 
 ## Licence
 
