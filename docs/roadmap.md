@@ -20,23 +20,22 @@
 - **Progressive permission** — nothing requested at install; page scripts registered
   only into origins you granted.
 - **Privacy history** — opt-in, aggregate counters with no site identity.
+- **Ask Veyl** — questions in plain English, answered by Chrome's built-in on-device
+  model from an evidence digest, appearing only where Chrome can run it.
 
 ## Deliberately not built yet
 
-### An on-device language model ("Ask Veyl")
+### A model Veyl ships itself
 
-The agreed architecture puts a small quantised model on the device to answer follow-up
-questions and phrase explanations. It is not in this build, and the reason matters:
-the deterministic explanation layer is not a placeholder for a model, it is the
-reliable floor beneath one.
+Ask Veyl runs on Chrome's built-in model, which means it is unavailable on machines
+where Chrome has not provisioned one — and that is accepted rather than worked around.
+Bundling a runtime would cost a multi-gigabyte download, `wasm-unsafe-eval` in the CSP
+and a far harder store review, to reach a feature that is by design optional.
 
-When it lands, the boundary should hold: the model may **phrase** evidence and answer
-questions about it. It may not decide whether a domain is a tracker, whether a policy
-permits a sale, or what level a dimension gets. Those stay in the evidence engine,
-where they can be tested and where "unknown" is a real answer.
-
-Practical shape: ~0.5–1.5B quantised, WebGPU, loaded on demand when the panel is
-opened — never running while you browse.
+The boundary holds either way: the model may **phrase** evidence and answer questions
+about it. It may not decide whether a domain is a tracker, whether a policy permits a
+sale, or what level a dimension gets. Those stay in the evidence engine, where they can
+be tested and where "unknown" is a real answer.
 
 ### Cloud policy analysis
 
@@ -63,6 +62,10 @@ sites at scale.
 - **`navigator.globalPrivacyControl`.** Veyl sends the `Sec-GPC` header but does not
   define the JavaScript property, because the probe runs before it knows your setting
   and a wrong value would be a lie to the page.
+- **The model is not always there.** `LanguageModel.availability()` returns
+  `unavailable` on plenty of otherwise capable machines, including an M2 Max with 96 GB
+  of RAM, because Chrome provisions the model component on its own terms. Ask Veyl
+  hides itself rather than pretending.
 - **Knowledge coverage.** 98 services cover the overwhelming majority of real-world
   tracking, but not all of it. Unrecognised domains are reported as unidentified and
   lower Veyl's stated confidence rather than being guessed at.

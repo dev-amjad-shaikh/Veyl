@@ -30,6 +30,24 @@ That request has leaked the browsing context, which is the sensitive part. The s
 applies to health, finance, politics, employment and adult sites. So the analysis stays
 here, where the browsing context already is.
 
+## The on-device model
+
+Ask Veyl uses Chrome's built-in Gemini Nano through `LanguageModel`. That choice is a
+privacy decision before it is a technical one:
+
+- **Veyl ships no weights and hosts no model.** Chrome downloads it, on its own
+  schedule, for the whole browser. Nothing about that download involves us.
+- **Inference is local.** The question and the evidence never leave the device. There
+  is no API key in this codebase because there is no API.
+- **The model sees a digest, not your browsing.** `src/analysis/digest.ts` builds it
+  from the report: site name, levels, services, named cookies, policy stances, and the
+  list of things Veyl could not establish. Not the URL, not the path, not page content.
+  An end-to-end test asserts the page URL never reaches the prompt.
+
+A bundled runtime such as WebLLM was rejected: it would mean a multi-gigabyte weight
+download from somewhere, `wasm-unsafe-eval` in the content security policy, and a much
+harder argument to make to anyone auditing this.
+
 ## What is written to disk
 
 | Key | Contents | Lifetime |

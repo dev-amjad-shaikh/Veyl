@@ -100,10 +100,23 @@ MV3 service workers are killed aggressively. Per-visit evidence is held in memor
 speed and mirrored into `chrome.storage.session` (memory-backed, discarded when the
 browser closes, never on disk) so a suspended worker loses nothing.
 
-## Where the local model would go
+## The model
 
-The explanation layer today is deterministic: templates over structured evidence. That
-is not a placeholder for a language model, it is the reliable floor beneath one — the
-moat is the evidence engine, the tracker graph and the provenance system, not the
-model. See [`roadmap.md`](roadmap.md) for where an on-device model earns its place and
-where it must not be trusted.
+The explanation layer is deterministic: templates over structured evidence. That is not
+a placeholder for a language model, it is the floor beneath one — the moat is the
+evidence engine, the tracker graph and the provenance system.
+
+On top of that floor, **Ask Veyl** answers questions in plain English using Chrome's
+built-in on-device model. Three things keep it inside the rule at the top of this file:
+
+1. It is shown `buildDigest(report)` and nothing else — no URL, no page content, no
+   browser access. Its whole world is conclusions the deterministic engine already
+   reached and can defend.
+2. Its instructions forbid inventing a company or a number, upgrading "none seen" to
+   "none", and asserting that a site sold anything.
+3. Its output is display-only. Nothing downstream reads it, stores it or acts on it.
+
+Chrome's Prompt API is a document API — it does not exist in a service worker — so this
+lives in the popup, which also means the model is only ever running while the panel is
+open. `src/popup/language-model.ts` wraps it; where the API or the model is missing,
+the panel does not render.

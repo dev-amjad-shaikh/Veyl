@@ -11,3 +11,4 @@ evidence/*.png
 .DS_Store
 tests/.build/
 dist-e2e/
+veyl-*.zip

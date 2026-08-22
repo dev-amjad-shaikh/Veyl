@@ -28,6 +28,11 @@ discrepancy, and Veyl shows you the sentence and the evidence side by side.
 through Chrome's declarative rules — never sign-in, payments, bot protection or
 anything else a page needs to work.
 
+**Answers questions** in plain English, if Chrome's on-device model is available. Veyl
+ships no model and hosts none: Chrome runs Gemini Nano locally, and the only thing it
+is ever shown is a digest of the evidence already on your screen. It phrases findings.
+It does not make them.
+
 ## What it refuses to do
 
 Veyl does not give a site a score out of a hundred. A number like *62/100* looks
@@ -53,6 +58,19 @@ And every statement in the interface is labelled with where it came from:
 So Veyl will tell you that advertising trackers loaded and that the policy permits
 sharing with advertising partners. It will not tell you the site *sold your data* —
 that turns on contracts no browser extension can see, and it says so.
+
+## The model, if you turn it on
+
+Ask Veyl appears only when `LanguageModel.availability()` says Chrome can run its
+built-in model (Chrome 138+, and Chrome downloads several gigabytes the first time any
+origin asks). Everything else in Veyl works without it, which is the point: the
+deterministic explanation layer is the floor, not a fallback.
+
+The boundary is enforced in code and in tests. The model receives
+`buildDigest(report)` — the site name, the levels, the services, the named cookies, the
+policy stances and the list of things Veyl could not establish. It does not receive the
+URL, the page path, the page content, or any browser access. Its instructions forbid
+inventing a company, upgrading "none seen" to "none", or claiming a site sold anything.
 
 ## Permissions
 

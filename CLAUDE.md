@@ -24,6 +24,8 @@ not record. Concretely:
 - `NONE SEEN` is not `NONE`; `UNKNOWN` is not `LOW`. Do not collapse them.
 - No numeric privacy score ever reaches the interface. A test enforces this.
 - An unrecognised domain stays unrecognised. It never becomes "probably a tracker".
+- The on-device model is shown `buildDigest(report)` and nothing else, and its output is
+  display-only. If you find yourself parsing what it said, stop.
 
 ## Things that will break trust if you change them carelessly
 
@@ -45,6 +47,6 @@ src/knowledge/   the tracker graph (JSON) and its resolver
 src/background/  service worker: observation, protection, history, permissions
 src/content/     probe (page world) and collector (isolated world)
 src/analysis/    inventory → exposure → consistency → report
-src/popup/       the report a person reads
+src/popup/       the report a person reads, and Ask Veyl
 src/options/     access, protection, history, and the privacy boundary
 ```

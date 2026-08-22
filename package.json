@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/build-tests.mjs && node --test tests/*.test.mjs",
     "e2e": "npm run build && node scripts/build-e2e.mjs && node --test --test-timeout=180000 e2e/*.e2e.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "store-assets": "node scripts/store-assets.mjs"
   },
   "dependencies": {
     "preact": "^10.27.2",

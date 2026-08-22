@@ -179,8 +179,64 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
   await popup.reload();
   await popup.waitForSelector('.header__site');
   await popup.waitForTimeout(1000);
+
+  // Chrome's on-device model is absent in this build, and Veyl must simply not
+  // offer the feature rather than showing a broken panel.
+  assert.equal(await popup.locator('.ask__form').count(), 0);
+
   await popup.screenshot({ path: 'evidence/popup.png', fullPage: true });
+
+  await askVeyl(context, id);
 });
+
+/**
+ * Exercises the Ask Veyl path with Chrome's model stubbed, and checks the thing
+ * that actually matters: the model is handed the evidence digest and nothing
+ * else — no URL, no page content.
+ */
+async function askVeyl(context, id) {
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 396, height: 900 });
+  await page.addInitScript(() => {
+    globalThis.LanguageModel = {
+      availability: async () => 'available',
+      create: async () => ({
+        promptStreaming(input) {
+          globalThis.__lastPrompt = input;
+          return new ReadableStream({
+            start(controller) {
+              for (const chunk of ['Google, Meta and TikTok ', 'all learn that you looked ', 'at this page.']) {
+                controller.enqueue(chunk);
+              }
+              controller.close();
+            },
+          });
+        },
+        destroy() {},
+      }),
+    };
+  });
+  await page.goto(`chrome-extension://${id}/popup/index.html`);
+  await page.waitForSelector('.ask__form', { timeout: 15_000 });
+
+  await page.locator('.ask__chip').first().click();
+  await page.waitForSelector('.ask__answer', { timeout: 10_000 });
+  await page.waitForFunction(() => document.querySelector('.ask__answer')?.textContent?.includes('this page.'));
+
+  const prompt = await page.evaluate(() => globalThis.__lastPrompt);
+  assert.match(prompt, /SITE: shop\.example/);
+  assert.match(prompt, /WHAT VEYL CANNOT ESTABLISH/);
+  assert.ok(!prompt.includes('/product/42'), 'the page path must not reach the model');
+  assert.ok(!/http:\/\/shop\.example:\d+/.test(prompt), 'the page URL must not reach the model');
+  assert.match(
+    await page.locator('.ask__note').innerText(),
+    /decides nothing/,
+    'the answer is labelled as phrasing, not as a finding'
+  );
+
+  await page.screenshot({ path: 'evidence/ask-veyl.png', fullPage: true });
+  await page.close();
+}
 
 function ask(page, tabId) {
   return page.evaluate((id) => chrome.runtime.sendMessage({ type: 'get-report', tabId: id }), tabId);

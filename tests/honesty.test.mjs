@@ -5,8 +5,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  EXPLAINER_INSTRUCTIONS,
   analyzeText,
   assessExposure,
+  buildDigest,
   buildInventory,
   buildReport,
   compare,
@@ -179,4 +181,40 @@ test('the report never exposes a numeric privacy score', () => {
   assert.ok(!/"score"/.test(serialised), 'a single authoritative-looking number hides uncertainty');
   assert.equal(report.status, 'ok');
   assert.ok(report.services.every((s) => Array.isArray(s.observed)));
+});
+
+// --- what the on-device model is allowed to see ----------------------------
+
+test('the model is shown a digest of the report and nothing else', () => {
+  const report = buildReport(TRACKED, null, false, { level: 'balanced', inherited: true });
+  const digest = buildDigest(report);
+
+  assert.ok(digest.includes('shop.example'));
+  assert.ok(!digest.includes(TRACKED.url), 'the page URL is not handed to the model, only the site');
+  assert.ok(!digest.includes('/product/42'), 'the path is browsing detail the model has no need for');
+  assert.ok(digest.length < 8000, `digest should stay small, was ${digest.length} characters`);
+});
+
+test('the digest carries provenance and the unknowns through to the model', () => {
+  const report = buildReport(TRACKED, null, false, { level: 'balanced', inherited: true });
+  const digest = buildDigest(report);
+
+  assert.match(digest, /\[observed\]|\[inferred\]/);
+  assert.ok(digest.includes('WHAT VEYL CANNOT ESTABLISH'));
+  assert.ok(digest.includes('Veyl has not been able to read a privacy policy'));
+});
+
+test('a clean page reaches the model as "NONE SEEN", never "NONE"', () => {
+  const clean = visit({ domains: { 'fastly.net': domain('fastly.net', ['fastly']) } });
+  const digest = buildDigest(buildReport(clean, null, false, { level: 'balanced', inherited: true }));
+
+  assert.ok(digest.includes('NONE SEEN'));
+  assert.ok(!/EXPOSURE: NONE$/m.test(digest));
+});
+
+test('the model is instructed to refuse the claims Veyl itself refuses', () => {
+  assert.match(EXPLAINER_INSTRUCTIONS, /Never say a site sold/i);
+  assert.match(EXPLAINER_INSTRUCTIONS, /cannot tell from this visit/i);
+  assert.match(EXPLAINER_INSTRUCTIONS, /"None seen" means Veyl watched and saw nothing/i);
+  assert.match(EXPLAINER_INSTRUCTIONS, /Never invent a company/i);
 });

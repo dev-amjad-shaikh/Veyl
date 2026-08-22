@@ -4,6 +4,7 @@ import type { ProtectionLevel } from '../domain/settings';
 import { send } from '../domain/messages';
 import { LEVEL_LABELS } from '../analysis/labels';
 import { Empty } from './ui';
+import { AskPanel } from './AskPanel';
 import {
   Consistency,
   Cookies,
@@ -74,6 +75,7 @@ export function App() {
       </header>
 
       <RightNow exposure={report.exposure} />
+      <AskPanel report={report} />
       <ExposurePanel exposure={report.exposure} />
       <MayKnow exposure={report.exposure} />
       <Consistency findings={report.consistency} />
