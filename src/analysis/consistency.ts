@@ -28,7 +28,7 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
         topic: 'consent',
         says: necessaryOnly.quote,
         saysIsQuote: true,
-        observed: `${preConsent.length} marketing or analytics service${preConsent.length === 1 ? '' : 's'} were contacted before you made a choice: ${preConsent.map((s) => s.name).join(', ')}.`,
+        observed: `${preConsent.length} marketing or analytics service${preConsent.length === 1 ? ' was' : 's were'} contacted before you made a choice: ${preConsent.map((s) => s.name).join(', ')}.`,
         explanation:
           'The policy limits pre-consent activity to what is strictly necessary, but your browser had already reached these services.',
       });

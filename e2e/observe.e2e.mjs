@@ -4,68 +4,18 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
-import { createServer } from 'node:http';
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { extensionId, launch, serveFixture, stubLanguageModel, waitUntilReady } from './harness.mjs';
 
 const EXTENSION = join(process.cwd(), 'dist-e2e');
 
-async function serveFixture() {
-  const index = await readFile('e2e/fixture/index.html');
-  const privacy = await readFile('e2e/fixture/privacy.html');
-  const server = createServer((req, res) => {
-    const body = req.url?.startsWith('/privacy') ? privacy : index;
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(body);
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  return { server, port: server.address().port };
-}
-
-async function launch(profileDir) {
-  return chromium.launchPersistentContext(profileDir, {
-    channel: 'chromium',
-    headless: true,
-    args: [
-      `--disable-extensions-except=${EXTENSION}`,
-      `--load-extension=${EXTENSION}`,
-      `--host-resolver-rules=MAP shop.example 127.0.0.1`,
-    ],
-  });
-}
-
-/**
- * A freshly installed extension registers its page scripts asynchronously.
- * In normal use that happens long before you browse; in a test it has to be
- * waited for, or the first navigation genuinely is unwatched.
- */
-async function waitUntilReady(context) {
-  const worker = context.serviceWorkers()[0];
-  for (let i = 0; i < 40; i++) {
-    const registered = await worker.evaluate(() => chrome.scripting.getRegisteredContentScripts());
-    if (registered.length >= 2) return;
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  throw new Error('the extension never registered its page scripts');
-}
-
-async function extensionId(context) {
-  let [worker] = context.serviceWorkers();
-  if (!worker) worker = await context.waitForEvent('serviceworker', { timeout: 20_000 });
-  return new URL(worker.url()).host;
-}
-
 test('Veyl explains a real tracking-heavy page end to end', async (t) => {
-  const { server, port } = await serveFixture();
-  const SITE = `http://shop.example:${port}`;
-  const profile = await mkdtemp(join(tmpdir(), 'veyl-e2e-'));
-  const context = await launch(profile);
+  const { server, origin: SITE } = await serveFixture();
+  const { context, dispose } = await launch(EXTENSION);
   t.after(async () => {
     await context.close();
     server.close();
-    await rm(profile, { recursive: true, force: true });
+    await dispose();
   });
 
   const id = await extensionId(context);
@@ -197,25 +147,11 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
 async function askVeyl(context, id) {
   const page = await context.newPage();
   await page.setViewportSize({ width: 396, height: 900 });
-  await page.addInitScript(() => {
-    globalThis.LanguageModel = {
-      availability: async () => 'available',
-      create: async () => ({
-        promptStreaming(input) {
-          globalThis.__lastPrompt = input;
-          return new ReadableStream({
-            start(controller) {
-              for (const chunk of ['Google, Meta and TikTok ', 'all learn that you looked ', 'at this page.']) {
-                controller.enqueue(chunk);
-              }
-              controller.close();
-            },
-          });
-        },
-        destroy() {},
-      }),
-    };
-  });
+  await page.addInitScript(stubLanguageModel, [
+    'Google, Meta and TikTok ',
+    'all learn that you looked ',
+    'at this page.',
+  ]);
   await page.goto(`chrome-extension://${id}/popup/index.html`);
   await page.waitForSelector('.ask__form', { timeout: 15_000 });
 

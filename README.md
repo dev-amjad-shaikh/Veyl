@@ -130,6 +130,20 @@ should be able to check for themselves are documented separately and deliberatel
 - [`docs/protection-rules.md`](docs/protection-rules.md) — what is blocked, what can never be
 - [`docs/privacy-boundary.md`](docs/privacy-boundary.md) — the line between this device and everywhere else
 - [`docs/roadmap.md`](docs/roadmap.md) — what is built, and what is deliberately not built yet
+- [`PRIVACY.md`](PRIVACY.md) — the privacy policy, in the same plain language as the product
+- [`store/submission.md`](store/submission.md) — every Chrome Web Store field, filled in
+
+## Publish it
+
+```bash
+npm run package
+```
+
+Builds and zips `dist/` into `veyl-<version>.zip` for the Chrome Web Store, refusing to
+package a build that has drifted from source. `npm run store-assets` regenerates the
+listing images by capturing the extension actually running against the test fixture.
+[`store/submission.md`](store/submission.md) has every dashboard field written out,
+including the permission justifications and the data disclosure.
 
 ## Licence
 

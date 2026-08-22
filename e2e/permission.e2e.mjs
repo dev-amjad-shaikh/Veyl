@@ -5,23 +5,16 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { launch } from './harness.mjs';
 
 const EXTENSION = join(process.cwd(), 'dist');
 
 test('the shipped build asks for nothing until you allow a site', async (t) => {
-  const profile = await mkdtemp(join(tmpdir(), 'veyl-perm-'));
-  const context = await chromium.launchPersistentContext(profile, {
-    channel: 'chromium',
-    headless: true,
-    args: [`--disable-extensions-except=${EXTENSION}`, `--load-extension=${EXTENSION}`],
-  });
+  const { context, dispose } = await launch(EXTENSION);
   t.after(async () => {
     await context.close();
-    await rm(profile, { recursive: true, force: true });
+    await dispose();
   });
 
   let [worker] = context.serviceWorkers();

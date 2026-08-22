@@ -88,6 +88,11 @@ function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+/** Agreement for a verb following a counted noun. */
+function verb(n: number, singular: string, plural: string): string {
+  return n === 1 ? singular : plural;
+}
+
 function names(services: { name: string }[], limit = 5): string {
   const shown = services.slice(0, limit).map((s) => s.name);
   return services.length > limit ? `${shown.join(', ')} and ${services.length - limit} more` : shown.join(', ');
@@ -115,7 +120,7 @@ function tracking(inventory: Inventory, watching: boolean): ExposureDimension {
     weight += 18;
     statements.push(
       say(
-        `${plural(identifiers.length, 'third-party cookie')} hold a value that looks like a unique identifier for you.`,
+        `${plural(identifiers.length, 'third-party cookie')} ${verb(identifiers.length, 'holds', 'hold')} a value that looks like a unique identifier for you.`,
         'observed',
         identifiers.slice(0, 8).map((c) => `${c.name} set for ${c.domain}`)
       )
