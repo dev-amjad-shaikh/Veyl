@@ -167,6 +167,10 @@ The sections mirror the domain: `sections/observed.tsx` (what Veyl saw),
 `sections/declared.tsx` (what the site says, and where they disagree),
 `sections/protection.tsx` (the control).
 
+`App.tsx` reports on whichever tab is in front, unless it was opened with `?tab=<id>` —
+the route "open in a tab" takes, and the route the tests use, so what they exercise is
+what a person exercises.
+
 Neither interface imports from `background/`. Shared copy lives in `domain/settings.ts`,
 and the knowledge counts come over the message protocol — which is also why the popup
 bundle is 37 KB rather than 182 KB.

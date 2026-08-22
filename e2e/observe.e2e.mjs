@@ -37,6 +37,11 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
     return tab.id;
   });
 
+  // Opened in a tab of its own, the popup reports on the tab named in the
+  // address — the same route a person takes via "open in a tab".
+  await popup.goto(`chrome-extension://${id}/popup/index.html?tab=${tabId}`);
+  await popup.waitForSelector('.header__site', { timeout: 20_000 });
+
   const report = await ask(popup, tabId);
 
   // --- what Veyl observed ------------------------------------------------
@@ -136,7 +141,7 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
 
   await popup.screenshot({ path: 'evidence/popup.png', fullPage: true });
 
-  await askVeyl(context, id);
+  await askVeyl(context, id, tabId);
   await keyboardAndScreenReader(popup);
 });
 
@@ -180,7 +185,7 @@ async function keyboardAndScreenReader(popup) {
  * that actually matters: the model is handed the evidence digest and nothing
  * else — no URL, no page content.
  */
-async function askVeyl(context, id) {
+async function askVeyl(context, id, tabId) {
   const page = await context.newPage();
   await page.setViewportSize({ width: 396, height: 900 });
   await page.addInitScript(stubLanguageModel, [
@@ -188,7 +193,7 @@ async function askVeyl(context, id) {
     'all learn that you looked ',
     'at this page.',
   ]);
-  await page.goto(`chrome-extension://${id}/popup/index.html`);
+  await page.goto(`chrome-extension://${id}/popup/index.html?tab=${tabId}`);
   await page.waitForSelector('.ask__form', { timeout: 15_000 });
 
   await page.locator('.ask__chip').first().click();

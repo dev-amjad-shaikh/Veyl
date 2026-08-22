@@ -182,6 +182,9 @@ works exactly the same. Veyl's settings page reports the status.
 
 ---
 
+> **The popup feels cramped?** *Open in a tab* at the bottom of the report opens the
+> same thing full width, still about the page you were on.
+
 ## Settings
 
 ![Veyl's settings page](images/settings.png)

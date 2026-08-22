@@ -15,11 +15,21 @@ type State =
   | { kind: 'unavailable'; report: UnavailableReport }
   | { kind: 'starting' };
 
+/**
+ * The popup normally reports on whichever tab is in front. Opened in a tab of
+ * its own — from "open in a tab", where the full report is easier to read — it
+ * carries the tab it is about in the address instead.
+ */
+const pinnedTab = (() => {
+  const value = Number(new URLSearchParams(location.search).get('tab'));
+  return Number.isInteger(value) && value > 0 ? value : null;
+})();
+
 export function App() {
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   const load = useCallback(async () => {
-    const result = await send({ type: 'get-report' });
+    const result = await send(pinnedTab === null ? { type: 'get-report' } : { type: 'get-report', tabId: pinnedTab });
     setState(result.status === 'ok' ? { kind: 'report', report: result } : { kind: 'unavailable', report: result as UnavailableReport });
   }, []);
 
@@ -80,6 +90,18 @@ export function App() {
       <footer class="footer">
         <span>Everything here was worked out on your device.</span>
         <span class="footer__spacer" />
+        {pinnedTab === null && (
+          <button
+            type="button"
+            class="linkish"
+            onClick={async () => {
+              const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+              if (tab?.id) await chrome.tabs.create({ url: `popup/index.html?tab=${tab.id}` });
+            }}
+          >
+            Open in a tab
+          </button>
+        )}
         <button type="button" class="linkish" onClick={() => chrome.runtime.openOptionsPage()}>
           Settings
         </button>

@@ -90,6 +90,8 @@ async function captureExtension() {
       'None of them needed to be here for the page to work.',
     ]);
     await popup.goto(`chrome-extension://${id}/popup/index.html`);
+    const tabId = await popup.evaluate(async () => (await chrome.tabs.query({ url: 'http://shop.example/*' }))[0].id);
+    await popup.goto(`chrome-extension://${id}/popup/index.html?tab=${tabId}`);
     await popup.waitForSelector('.header__site', { timeout: 20_000 });
     await popup.waitForSelector('.finding--discrepancy', { timeout: 20_000 });
 

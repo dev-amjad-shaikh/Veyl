@@ -269,27 +269,21 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
 });
 
 /**
- * The tab the person is actually looking at.
+ * The tab the person is looking at — and never a different one.
  *
- * Usually the active tab, but Veyl's own pages can be in front (the settings
- * page, or a report opened in a tab), and a report about the settings page
- * helps nobody. In that case fall back to the most recently used web page.
+ * Veyl once fell back to the most recently used web page when the active tab
+ * was not analysable, which meant standing on a new tab or a chrome:// page
+ * showed a full report for some other site. In a product whose whole question
+ * is "what is *this* site doing", answering about a different site is worse
+ * than answering nothing, so there is no fallback: an unanalysable tab is
+ * reported as unanalysable.
+ *
+ * Opening the popup from the toolbar grants `activeTab`, which is what makes a
+ * real site's url readable here even before it has been granted.
  */
 async function activeTabId(): Promise<number | null> {
   const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (active?.id !== undefined && isWebPage(active.url)) return active.id;
-
-  // Chrome hides a tab's url from an extension with no access to it, so an
-  // absent url is ambiguous: it could be a site awaiting permission, or one of
-  // Veyl's own pages. Opening the popup from the toolbar grants `activeTab`,
-  // which makes the real case readable; otherwise prefer the last web page.
-  const tabs = (await chrome.tabs.query({})).filter((tab) => isWebPage(tab.url) && tab.id !== undefined);
-  tabs.sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0));
-  return tabs[0]?.id ?? active?.id ?? null;
-}
-
-function isWebPage(url: string | undefined): boolean {
-  return url !== undefined && (url.startsWith('http://') || url.startsWith('https://'));
+  return active?.id ?? null;
 }
 
 
