@@ -13,6 +13,8 @@
 import type { SiteReport } from '../domain/types';
 import { CATEGORY_LABELS, DIMENSION_LABELS, LEVEL_LABELS } from './labels';
 
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 const MAX_SERVICES = 12;
 const MAX_COOKIES = 10;
 const MAX_CLAIMS = 6;
@@ -31,10 +33,19 @@ export function buildDigest(report: SiteReport): string {
   }
 
   section('Counts');
+  const byCategory = new Map<string, number>();
+  for (const service of report.services) {
+    if (service.functional) continue;
+    const label = CATEGORY_LABELS[service.category].toLowerCase();
+    byCategory.set(label, (byCategory.get(label) ?? 0) + 1);
+  }
+  // Broken down by kind, because a bare total invites the model to describe a
+  // session recorder as an advertising service.
+  const mix = [...byCategory.entries()].map(([label, n]) => `${n} ${label}`).join(', ');
   lines.push(
-    `- ${exposure.rightNow.trackingServices} tracking services, ${exposure.rightNow.companies} companies contacted`,
-    `- ${exposure.rightNow.cookies} cookies (${exposure.rightNow.thirdPartyCookies} third-party)`,
-    `- ${exposure.rightNow.blocked} requests blocked by Veyl (protection: ${report.protection.level})`
+    `- ${plural(exposure.rightNow.trackingServices, 'tracking service')}${mix ? ` (${mix})` : ''}, ${plural(exposure.rightNow.companies, 'company', 'companies')} contacted`,
+    `- ${plural(exposure.rightNow.cookies, 'cookie')} (${exposure.rightNow.thirdPartyCookies} third-party)`,
+    `- ${plural(exposure.rightNow.blocked, 'request')} blocked by Veyl (protection: ${report.protection.level})`
   );
 
   const tracking = report.services.filter((s) => !s.functional).slice(0, MAX_SERVICES);
@@ -65,7 +76,7 @@ export function buildDigest(report: SiteReport): string {
     }
   }
   if (report.cookies.unnamed.length > 0) {
-    lines.push(`- ${report.cookies.unnamed.length} further cookies Veyl cannot identify.`);
+    lines.push(`- ${plural(report.cookies.unnamed.length, 'further cookie')} Veyl cannot identify.`);
   }
 
   if (report.signals.length > 0) {

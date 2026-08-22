@@ -4,6 +4,19 @@ import { EXPLAINER_INSTRUCTIONS, buildDigest } from '../analysis/digest';
 import { availability, createSession, type ModelAvailability, type Session } from '../model/language-model';
 import { Section } from './ui';
 
+/**
+ * Small models drift into markdown however plainly you ask them not to, and the
+ * answer is rendered as plain text. Only paired emphasis and list markers are
+ * removed; nothing that would change what was said.
+ */
+export function asPlainText(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/(^|\s)[*_](\S(?:.*?\S)?)[*_](?=\s|[.,;:!?)]|$)/g, '$1$2')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s{0,3}[-*+]\s+/gm, '');
+}
+
 const SUGGESTIONS = [
   'What should I actually care about here?',
   'Who learns the most about me on this page?',
@@ -16,6 +29,7 @@ export function AskPanel({ report }: { report: SiteReport }) {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const session = useRef<Session | null>(null);
@@ -44,14 +58,22 @@ export function AskPanel({ report }: { report: SiteReport }) {
       setAnswer('');
       abort.current = new AbortController();
       try {
-        session.current ??= await createSession(EXPLAINER_INSTRUCTIONS, (fraction) => setProgress(fraction));
+        if (!session.current) {
+          // Chrome takes a good fifteen seconds to spin the model up the first
+          // time, which is far too long to sit under the word "Thinking".
+          setStarting(true);
+          session.current = await createSession(EXPLAINER_INSTRUCTIONS, (fraction) => setProgress(fraction));
+          setStarting(false);
+        }
         const prompt = `EVIDENCE Veyl gathered for this page:\n\n${buildDigest(report)}\n\nQUESTION: ${text.trim()}`;
         await session.current.ask(prompt, (chunk) => setAnswer((current) => current + chunk), abort.current.signal);
+        setAnswer((current) => asPlainText(current));
       } catch (cause) {
         if ((cause as Error)?.name !== 'AbortError') {
           setError('Chrome’s on-device model could not answer that. Everything above still stands on its own.');
         }
       } finally {
+        setStarting(false);
         setBusy(false);
       }
     },
@@ -121,7 +143,11 @@ export function AskPanel({ report }: { report: SiteReport }) {
 
       {(answer || busy) && (
         <div class="ask__answer" aria-live="polite">
-          {answer || <span class="muted">Thinking…</span>}
+          {answer || (
+            <span class="muted">
+              {starting ? 'Starting Chrome’s on-device model…' : 'Thinking…'}
+            </span>
+          )}
           {busy && (
             <button type="button" class="linkish linkish--block" onClick={() => abort.current?.abort()}>
               Stop

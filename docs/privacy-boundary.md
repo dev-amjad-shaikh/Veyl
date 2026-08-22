@@ -41,8 +41,30 @@ privacy decision before it is a technical one:
   is no API key in this codebase because there is no API.
 - **The model sees a digest, not your browsing.** `src/analysis/digest.ts` builds it
   from the report: site name, levels, services, named cookies, policy stances, and the
-  list of things Veyl could not establish. Not the URL, not the path, not page content.
-  An end-to-end test asserts the page URL never reaches the prompt.
+  list of things Veyl could not establish.
+
+### What the model is never shown
+
+Not the page address, not its path or query string, not the page title, not page
+content, not form input, not cookie values, not browser-storage values or key names, and
+not the names of cookies Veyl could not identify — those contribute a count and nothing
+more. Cookie names that do appear come from Veyl's own curated list (`_ga`, `IDE`), so
+they carry nothing from the page.
+
+`CookieObservation` has no `value` field at all: a cookie's value is inspected in memory
+to judge whether it looks like an identifier, and the boolean is what survives. A value
+cannot leak because it is never recorded.
+
+The one piece of browsing information in the digest is **the site's domain**, which the
+model must have to say anything useful. It stays on the device.
+
+Two tests hold this: one plants an email address, an order reference, a patient cookie
+name and browser-storage keys throughout the evidence and asserts none reach the prompt;
+another asserts the report can never carry a cookie value. Run those first if you add a
+field to the digest.
+
+Your question is free text you typed, and it goes to the model on your machine. If you
+type something personal, it stays there — there is no request to intercept.
 
 A bundled runtime such as WebLLM was rejected: it would mean a multi-gigabyte weight
 download from somewhere, `wasm-unsafe-eval` in the content security policy, and a much

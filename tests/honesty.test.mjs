@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   EXPLAINER_INSTRUCTIONS,
+  asPlainText,
   analyzeText,
   assessExposure,
   buildDigest,
@@ -217,4 +218,72 @@ test('the model is instructed to refuse the claims Veyl itself refuses', () => {
   assert.match(EXPLAINER_INSTRUCTIONS, /cannot tell from this visit/i);
   assert.match(EXPLAINER_INSTRUCTIONS, /"None seen" means Veyl watched and saw nothing/i);
   assert.match(EXPLAINER_INSTRUCTIONS, /Never invent a company/i);
+});
+
+test('a model answer is rendered as plain text, without changing what it said', () => {
+  const messy = '**Important**: they *do* share data.\n- one thing\n## Heading\nA 5 * 3 sum stays.';
+  const clean = asPlainText(messy);
+  assert.ok(!clean.includes('**'));
+  assert.ok(clean.includes('Important: they do share data.'));
+  assert.ok(clean.includes('one thing'));
+  assert.ok(!clean.includes('##'));
+  assert.ok(clean.includes('A 5 * 3 sum stays.'), 'arithmetic is not emphasis');
+});
+
+/**
+ * The digest is the only thing the on-device model is ever shown. This plants
+ * personal data everywhere the evidence layer could conceivably carry it and
+ * proves none of it survives into the prompt. It is the test to run first if
+ * anyone adds a field to the digest.
+ */
+test('nothing personal reaches the on-device model', () => {
+  const personal = visit({
+    site: 'clinic.example',
+    url: 'https://clinic.example/patients/order?email=jane.doe%40example.com&order=A-99312',
+    title: 'Order A-99312 — Jane Doe — Clinic',
+    domains: {
+      'doubleclick.net': domain('doubleclick.net', ['google-ad-manager']),
+      'hotjar.com': domain('hotjar.com', ['hotjar']),
+    },
+    cookies: [
+      // A cookie Veyl can name: its name is from the curated list, not the page.
+      { name: '_ga', domain: 'clinic.example', thirdParty: false, session: false, lifetimeDays: 400, httpOnly: false, sameSite: 'lax', looksLikeIdentifier: true },
+      // Cookies Veyl cannot name must not be listed at all.
+      { name: 'patient_ref_A99312', domain: 'clinic.example', thirdParty: false, session: false, lifetimeDays: 30, httpOnly: true, sameSite: 'lax', looksLikeIdentifier: true },
+      { name: 'jane.doe@example.com', domain: 'clinic.example', thirdParty: false, session: true, httpOnly: false, sameSite: 'lax', looksLikeIdentifier: false },
+    ],
+    storage: [
+      { kind: 'localStorage', keys: 4, identifierKeys: ['user_9931_email', 'auth.jane.doe', 'basket_A-99312'] },
+    ],
+    signals: [{ kind: 'canvas-readback', calls: 3, firstSeenAt: 0 }],
+  });
+
+  const digest = buildDigest(buildReport(personal, null, false, { level: 'balanced', inherited: true }));
+
+  const mustNotAppear = [
+    'jane.doe@example.com', 'Jane Doe', 'jane.doe',      // an identity
+    'A-99312', 'A99312',                                  // an order reference
+    '/patients/order', 'email=', 'order=',                // the address and its query
+    'patient_ref', 'user_9931_email', 'auth.jane', 'basket_', // unnamed cookies and storage keys
+    'Order A-99312',                                      // the page title
+  ];
+  for (const secret of mustNotAppear) {
+    assert.ok(!digest.includes(secret), `"${secret}" reached the prompt handed to the model`);
+  }
+
+  // The site itself does appear, and must: the model has to know what it is
+  // talking about. It never leaves the device.
+  assert.ok(digest.includes('clinic.example'));
+  // Named cookies come from Veyl's own list, so they carry nothing from the page.
+  assert.ok(digest.includes('_ga'));
+  assert.ok(digest.includes('2 further cookies Veyl cannot identify'));
+});
+
+test('the evidence layer never even records a cookie value', () => {
+  const report = buildReport(TRACKED, null, false, { level: 'balanced', inherited: true });
+  const everything = JSON.stringify(report);
+  assert.ok(!/"value"/.test(everything), 'a cookie value must never enter the report');
+  for (const cookie of [...report.cookies.named, ...report.cookies.unnamed]) {
+    assert.ok(!('value' in cookie), `${cookie.name} carries a value into the interface`);
+  }
 });

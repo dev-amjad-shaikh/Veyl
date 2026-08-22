@@ -63,9 +63,13 @@ sites at scale.
   define the JavaScript property, because the probe runs before it knows your setting
   and a wrong value would be a lie to the page.
 - **The model is not always there.** `LanguageModel.availability()` returns
-  `unavailable` on plenty of otherwise capable machines, including an M2 Max with 96 GB
-  of RAM, because Chrome provisions the model component on its own terms. Ask Veyl
-  hides itself rather than pretending.
+  `unavailable` where Chrome has not provisioned the model component, which it does on
+  its own schedule. Ask Veyl hides itself rather than pretending. Note that a throwaway
+  automation profile always reports `unavailable`, because the drivers disable component
+  updates — do not mistake that for a device limitation.
+- **The model is slow to start.** Chrome takes roughly fifteen seconds to create the
+  first session, then about four seconds an answer. The interface says which of those it
+  is waiting on.
 - **Knowledge coverage.** 98 services cover the overwhelming majority of real-world
   tracking, but not all of it. Unrecognised domains are reported as unidentified and
   lower Veyl's stated confidence rather than being guessed at.
