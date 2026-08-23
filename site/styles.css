@@ -1,20 +1,25 @@
 /*
  * noveyl.work
  *
- * Near-black ground, product panels lit from behind, section headings that turn
- * into an italic serif on their second line. The screenshots are the extension
- * running in dark mode against the end-to-end fixture — the interface itself,
- * not a rendering of it.
+ * Near-black ground, product panels lit from behind, one variable grotesque
+ * doing all the typographic work through weight and optical size. The
+ * screenshots are the extension running in dark mode against the end-to-end
+ * fixture — the interface itself, not a rendering of it.
  *
  * No third-party requests. Fonts are served from this origin. A privacy tool
  * whose own site phoned a font CDN would be the thing it warns you about.
  */
 
-@font-face { font-family: Archivo; src: url('assets/fonts/archivo-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-@font-face { font-family: Archivo; src: url('assets/fonts/archivo-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
-@font-face { font-family: Archivo; src: url('assets/fonts/archivo-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
-@font-face { font-family: Archivo; src: url('assets/fonts/archivo-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-@font-face { font-family: 'Serif Accent'; src: url('assets/fonts/instrument-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+/* One variable family, carrying its own optical-size axis. Bricolage Grotesque
+   has visible personality — flat-sided bowls, a tall wedge on the 'y', tight
+   apertures — which is the point: a neutral grotesque paired with an italic
+   serif accent is the house style of every generated landing page this year. */
+@font-face {
+  font-family: Bricolage;
+  src: url('assets/fonts/bricolage.woff2') format('woff2-variations');
+  font-weight: 300 800;
+  font-display: swap;
+}
 @font-face { font-family: 'JB Mono'; src: url('assets/fonts/jb-mono-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'JB Mono'; src: url('assets/fonts/jb-mono-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
 
@@ -36,8 +41,7 @@
   --high: #f4726f;
   --unknown: #7d8694;
 
-  --sans: Archivo, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-  --serif: 'Serif Accent', Georgia, serif;
+  --sans: Bricolage, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   --mono: 'JB Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --gutter: clamp(1.15rem, 4vw, 3rem);
@@ -70,11 +74,11 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ── type ──────────────────────────────────────────────────────────────── */
 
-.h1, .h2 { font-weight: 500; letter-spacing: -0.035em; line-height: 1.06; text-wrap: balance; }
-.h1 { font-size: clamp(2.5rem, 6.4vw, 4.9rem); }
-.h2 { font-size: clamp(1.9rem, 4.2vw, 3.1rem); }
-/* the signature: the second line resolves into an italic serif */
-.turn { display: block; font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.015em; }
+.h1, .h2 { font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; text-wrap: balance; }
+.h1 { font-size: clamp(2.5rem, 6.6vw, 5.1rem); font-variation-settings: 'opsz' 96; }
+.h2 { font-size: clamp(1.9rem, 4.2vw, 3.2rem); font-variation-settings: 'opsz' 72; }
+/* The second line steps back in weight and colour instead of changing typeface. */
+.turn { display: block; font-weight: 300; color: var(--text-2); letter-spacing: -0.03em; }
 
 .label {
   font-family: var(--mono); font-size: 0.6875rem; font-weight: 500;
@@ -94,7 +98,7 @@ img { max-width: 100%; height: auto; display: block; }
 .masthead__inner { display: flex; align-items: center; gap: 1.5rem; height: 4rem; }
 .brand { display: flex; align-items: center; gap: 0.55rem; text-decoration: none; }
 .brand svg { width: 1.15rem; height: 1.15rem; }
-.brand span { font-weight: 600; letter-spacing: 0.02em; font-size: 1rem; }
+.brand span { font-weight: 700; letter-spacing: -0.02em; font-size: 1.0625rem; }
 .masthead nav { margin-left: auto; display: none; gap: 2rem; }
 @media (min-width: 52rem) { .masthead nav { display: flex; } }
 .masthead nav a { font-size: 0.875rem; color: var(--text-2); text-decoration: none; transition: color 160ms var(--ease); }
@@ -151,7 +155,7 @@ img { max-width: 100%; height: auto; display: block; }
 .band__cell { padding: 2rem 1.25rem 2.25rem 0; border-right: 1px solid var(--edge); }
 .band__cell:nth-child(2n) { border-right: 0; }
 @media (min-width: 58rem) { .band__cell { padding-left: 1.5rem; border-right: 1px solid var(--edge); } .band__cell:nth-child(2n) { border-right: 1px solid var(--edge); } .band__cell:first-child { padding-left: 0; } .band__cell:last-child { border-right: 0; } }
-.band__value { font-size: clamp(2rem, 4.4vw, 3.1rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1; margin: 0.85rem 0 0.65rem; }
+.band__value { font-size: clamp(2rem, 4.4vw, 3.2rem); font-weight: 600; letter-spacing: -0.05em; line-height: 1; margin: 0.85rem 0 0.65rem; font-variation-settings: 'opsz' 48; }
 .band__cell p { font-size: 0.8125rem; color: var(--text-2); line-height: 1.5; }
 
 /* ── sections ──────────────────────────────────────────────────────────── */
@@ -167,7 +171,7 @@ img { max-width: 100%; height: auto; display: block; }
   .feature { grid-template-columns: 1fr 1fr; }
   .feature--flip .feature__text { order: 2; }
 }
-.feature__text h3 { font-size: clamp(1.4rem, 2.4vw, 1.85rem); font-weight: 500; letter-spacing: -0.025em; margin-top: 0.9rem; }
+.feature__text h3 { font-size: clamp(1.4rem, 2.4vw, 1.9rem); font-weight: 600; letter-spacing: -0.03em; margin-top: 0.9rem; font-variation-settings: 'opsz' 40; }
 .feature__text p { margin-top: 1rem; color: var(--text-2); font-size: 0.9375rem; line-height: 1.7; }
 .feature__media {
   /* Lighter than the panel it holds: the screenshots are dark-mode captures and
@@ -214,8 +218,8 @@ img { max-width: 100%; height: auto; display: block; }
 .never li::before { content: '−'; color: var(--high); }
 
 /* quote card */
-.quote { font-size: clamp(1.15rem, 2.1vw, 1.5rem); line-height: 1.4; letter-spacing: -0.02em; margin-top: 1rem; }
-.quote em { font-family: var(--serif); font-style: italic; }
+.quote { font-size: clamp(1.15rem, 2.1vw, 1.5rem); line-height: 1.4; letter-spacing: -0.025em; margin-top: 1rem; font-weight: 500; }
+.quote em { font-style: normal; font-weight: 700; }
 
 /* closing */
 .closing { padding-block: clamp(4rem, 9vw, 7rem) clamp(3rem, 6vw, 4rem); }
@@ -227,7 +231,8 @@ img { max-width: 100%; height: auto; display: block; }
 .footer a:hover { color: var(--text); }
 .footer__links { display: flex; flex-wrap: wrap; gap: 1.5rem; }
 .wordmark {
-  font-size: clamp(4.5rem, 22vw, 17rem); font-weight: 600; letter-spacing: -0.055em;
+  font-size: clamp(4.5rem, 22vw, 17rem); font-weight: 700; letter-spacing: -0.06em;
+  font-variation-settings: 'opsz' 96;
   line-height: 0.8; text-align: center; margin-top: clamp(2rem, 5vw, 3.5rem);
   background: linear-gradient(to bottom, rgb(236 238 241 / 22%), rgb(236 238 241 / 3%));
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -241,7 +246,7 @@ img { max-width: 100%; height: auto; display: block; }
 .doc__head h1 { margin-top: 1.25rem; }
 .doc__head .lede { margin-top: 1.5rem; }
 .doc__body { max-width: 44rem; margin-top: clamp(2.5rem, 5vw, 3.5rem); }
-.doc__body h2 { font-size: clamp(1.35rem, 2.5vw, 1.75rem); font-weight: 500; letter-spacing: -0.025em; margin-top: 3rem; padding-top: 1.75rem; border-top: 1px solid var(--edge); }
+.doc__body h2 { font-size: clamp(1.35rem, 2.5vw, 1.8rem); font-weight: 600; letter-spacing: -0.03em; margin-top: 3rem; padding-top: 1.75rem; border-top: 1px solid var(--edge); }
 .doc__body h2:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
 .doc__body h3 { font-size: 1rem; font-weight: 600; margin-top: 1.75rem; }
 .doc__body p { margin-top: 1rem; color: var(--text-2); }
