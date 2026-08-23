@@ -149,6 +149,13 @@ should be able to check for themselves are documented separately and deliberatel
 - [`PRIVACY.md`](PRIVACY.md) — the privacy policy, in the same plain language as the product
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to set up, what to test, and the rule that governs changes
 
+## The site
+
+`site/` is the project's website — a static page and the privacy policy, no build step.
+Open `site/index.html` directly, or drop the folder on any host. It loads nothing from a
+third party: the fonts are served from the same origin, and there is no analytics, because
+Veyl would have flagged its own site otherwise.
+
 ## Licence
 
 MIT. The tracker knowledge base is compiled from public vendor documentation; no

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veyl — see what a website is really doing with your data</title>
+<meta name="description" content="Veyl watches what a website actually does with your data, reads what it says it does, compares the two, and explains the result in plain language. Entirely on your device.">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Veyl — a privacy agent for the web">
+<meta property="og:description" content="What is this website learning about you, who is it sharing that with, and what can you do about it?">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://noveyl.work/">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap masthead__inner">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M28 30 L50 74" stroke="#e7eaef" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M50 74 L72 30" stroke="#86a5ff" stroke-width="12" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span>Veyl</span>
+    </a>
+    <nav>
+      <a href="#how" class="is-quiet">How it works</a>
+      <a href="#levels" class="is-quiet">What it won't say</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/dev-amjad-shaikh/Veyl">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow rise rise-1">A privacy agent for the web</p>
+        <h1 class="display rise rise-2">What is this website <em>learning</em> about you?</h1>
+        <div class="hero__body rise rise-3">
+          <p class="lede">
+            You shouldn't need to understand ad tech, cookie classifications or a nine-thousand-word
+            policy to answer that. Veyl watches what a site actually does, reads what it says it does,
+            and tells you where the two disagree.
+          </p>
+          <p class="lede">
+            It runs entirely in your browser. No account, no server, no telemetry — Veyl has nowhere
+            to send your browsing even if it wanted to.
+          </p>
+        </div>
+        <div class="actions rise rise-4">
+          <a class="btn btn--primary" href="https://github.com/dev-amjad-shaikh/Veyl#readme">Get Veyl</a>
+          <a class="btn" href="https://github.com/dev-amjad-shaikh/Veyl">Read the source</a>
+        </div>
+      </div>
+
+      <figure class="hero__shot rise rise-5">
+        <img src="assets/report.png" alt="The Veyl report for a shopping site: high exposure, six cookies, seven tracking services, five companies contacted, six requests blocked, and a list of the companies involved." width="400" height="880">
+        <figcaption><span>Report · shop.example</span><span>Actual output</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="legend">
+    <div class="wrap legend__grid">
+      <div class="legend__cell">
+        <span class="prov prov--observed">Observed</span>
+        <p>Veyl watched it happen in your browser.</p>
+      </div>
+      <div class="legend__cell">
+        <span class="prov prov--declared">Declared</span>
+        <p>The site claims it in its own published policy.</p>
+      </div>
+      <div class="legend__cell">
+        <span class="prov prov--inferred">Inferred</span>
+        <p>Veyl concluded it from what a known service does.</p>
+      </div>
+      <div class="legend__cell">
+        <span class="prov prov--unknown">Unknown</span>
+        <p>Veyl cannot establish it, and will not guess.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow">How it works</p>
+        <h2 class="display">There are three different truths about a website.</h2>
+        <p class="lede">Most privacy tools tell you one of them. The interesting part is the gap between them.</p>
+      </div>
+
+      <div class="truths">
+        <article class="truth">
+          <p class="truth__n">01 — Declared</p>
+          <h3>What the site says</h3>
+          <p>
+            Veyl fetches the privacy policy and, where one exists, the separate cookie policy —
+            your browser does the fetching, and they are read on your device. Out comes a set of
+            checkable claims, each keeping the sentence it came from.
+          </p>
+        </article>
+        <article class="truth">
+          <p class="truth__n">02 — Observed</p>
+          <h3>What the site does</h3>
+          <p>
+            Every company the page contacts, every cookie and its lifetime, what is kept in browser
+            storage, and which browser APIs associated with fingerprinting were called — and whether
+            any of it happened before you were asked.
+          </p>
+        </article>
+        <article class="truth">
+          <p class="truth__n">03 — Compared</p>
+          <h3>Where they differ</h3>
+          <p>
+            A policy promising only strictly necessary cookies before consent, next to the seven
+            marketing services that had already loaded. Quoted from the site, set against what your
+            browser actually did.
+          </p>
+        </article>
+      </div>
+
+      <div class="compare">
+        <div class="compare__row">
+          <div class="compare__side">
+            <h3>The policy said</h3>
+            <blockquote>
+              “We use only strictly necessary cookies before you consent to our use of cookies and
+              similar technologies.”
+            </blockquote>
+          </div>
+          <div class="compare__side">
+            <h3>Your browser did</h3>
+            <ul>
+              <li>Google Ads &amp; Ad Manager</li>
+              <li>Meta Pixel</li>
+              <li>Hotjar — session recording</li>
+              <li>Criteo</li>
+              <li>TikTok Pixel</li>
+            </ul>
+          </div>
+        </div>
+        <div class="compare__verdict">
+          <strong>Possible discrepancy</strong>
+          <p>All contacted before any choice was made. Veyl shows you the sentence and the evidence side by side, and leaves the conclusion to you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="levels">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow">What it won't say</p>
+        <h2 class="display">No score out of a hundred.</h2>
+        <p class="lede">
+          A number like <em>62/100</em> looks authoritative and hides how much of the picture was
+          actually visible. Veyl reports a level per dimension, and says separately how confident
+          it is. Two of those levels are doing careful work.
+        </p>
+      </div>
+
+      <div class="levels">
+        <div class="level level--none">
+          <span class="level__chip">NONE SEEN</span>
+          <p>Veyl was watching and saw nothing. Not the same as proving nothing happened.</p>
+        </div>
+        <div class="level level--low">
+          <span class="level__chip">LOW</span>
+          <p>A little measurement, and nothing that follows you between websites.</p>
+        </div>
+        <div class="level level--medium">
+          <span class="level__chip">MEDIUM</span>
+          <p>The site learns more about you than it needs in order to work.</p>
+        </div>
+        <div class="level level--high">
+          <span class="level__chip">HIGH</span>
+          <p>Your visit is reported to companies whose business is following people.</p>
+        </div>
+        <div class="level level--unknown">
+          <span class="level__chip">UNKNOWN</span>
+          <p>Veyl could not look, or cannot establish it. Not a quiet way of saying “low”.</p>
+        </div>
+      </div>
+
+      <div class="compare" style="margin-top:2rem">
+        <div class="compare__side">
+          <h3>The line Veyl will not cross</h3>
+          <blockquote style="font-size:1.3rem">
+            It will tell you that advertising trackers loaded, and that the policy permits sharing
+            with advertising partners. It will not tell you the site <em>sold</em> your data.
+          </blockquote>
+          <p style="margin-top:1.25rem;color:var(--text-2);font-size:0.9375rem">
+            That turns on contracts no browser extension can see. So Veyl says so, and puts the
+            question on a permanent list of things it cannot answer.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow">The awkward question</p>
+        <h2 class="display">What does the privacy tool do with your data?</h2>
+        <p class="lede">
+          Nothing leaves this device. Not as a promise — as a property of the build. There is one
+          outbound request in the whole extension, and it fetches the policy of the site you are
+          already on.
+        </p>
+      </div>
+
+      <div class="promises">
+        <div class="does">
+          <h3>What it does</h3>
+          <ul>
+            <li>Asks for no website access when you install it — you allow one site at a time</li>
+            <li>Holds a visit in memory and destroys it when the tab closes</li>
+            <li>Blocks advertising and session recording, never sign-in, payments or bot protection</li>
+            <li>Answers questions using Chrome's on-device model, where your browser provides one</li>
+            <li>Publishes its scoring method, tracker data and privacy boundary for anyone to check</li>
+          </ul>
+        </div>
+        <div class="never">
+          <h3>What it never does</h3>
+          <ul>
+            <li>Send your browsing anywhere — there is no server to send it to</li>
+            <li>Keep a list of the sites you have visited, or hashes of them</li>
+            <li>Record a cookie's value; the evidence has no field for one</li>
+            <li>Contain analytics, crash reporting or telemetry of any kind</li>
+            <li>Ask you to make an account</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="compare__verdict" style="margin-top:3rem;border:1px solid var(--rule);background:var(--paper)">
+        <strong style="color:var(--accent)">Observed</strong>
+        <p>
+          This page loads no third-party resources. No fonts from a CDN, no analytics, no embeds.
+          Point Veyl at it and it will find nothing — which is the only demonstration worth making.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing wrap">
+    <h2 class="display">Open any website.<br>Find out what it already knows.</h2>
+    <p>
+      Free and open source under the MIT licence. Built to be checked rather than believed —
+      the evidence schema, the scoring method and the tracker data are all published.
+    </p>
+    <div class="actions">
+      <a class="btn btn--primary" href="https://github.com/dev-amjad-shaikh/Veyl#readme">Get Veyl</a>
+      <a class="btn" href="/privacy/">Privacy policy</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <p class="footer__note">
+      Veyl is a personal, non-commercial project.<br>
+      Nothing on this site tracks you.
+    </p>
+    <div class="footer__links">
+      <a href="/privacy/">Privacy policy</a>
+      <a href="https://github.com/dev-amjad-shaikh/Veyl/blob/main/docs/user-guide.md">User guide</a>
+      <a href="https://github.com/dev-amjad-shaikh/Veyl">Source</a>
+      <a href="https://github.com/dev-amjad-shaikh/Veyl/issues">Report a problem</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
