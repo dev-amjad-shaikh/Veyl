@@ -152,9 +152,17 @@ should be able to check for themselves are documented separately and deliberatel
 ## The site
 
 `site/` is the project's website — a static page and the privacy policy, no build step.
-Open `site/index.html` directly, or drop the folder on any host. It loads nothing from a
-third party: the fonts are served from the same origin, and there is no analytics, because
-Veyl would have flagged its own site otherwise.
+Open `site/index.html` directly, or drop the folder on any host.
+
+```bash
+npm run site-shots   # capture the extension's panels in dark mode for the page
+npm run site         # regenerate site/privacy/ from PRIVACY.md
+```
+
+The product shots are the extension running against the end-to-end fixture, so the page
+cannot promise something the build does not do. It loads nothing from a third party: the
+fonts are served from the same origin, and there is no analytics, because Veyl would have
+flagged its own site otherwise.
 
 ## Licence
 

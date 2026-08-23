@@ -14,7 +14,9 @@
     "icons": "node scripts/make-icons.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "store-assets": "node scripts/store-assets.mjs",
-    "smoke": "npm run build && node scripts/build-e2e.mjs && node scripts/smoke.mjs"
+    "smoke": "npm run build && node scripts/build-e2e.mjs && node scripts/smoke.mjs",
+    "site": "node scripts/build-site.mjs",
+    "site-shots": "npm run build && node scripts/build-e2e.mjs && node scripts/site-shots.mjs"
   },
   "dependencies": {
     "preact": "^10.27.2",

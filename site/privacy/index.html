@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy policy — Veyl</title>
 <meta name="description" content="What Veyl does with your data. The short version: it has no server, and nothing leaves your device.">
-<meta name="theme-color" content="#0a0c10">
+<meta name="theme-color" content="#08090b">
 <link rel="icon" href="../assets/icon.png">
 <link rel="stylesheet" href="../styles.css">
 <meta property="og:title" content="Veyl — privacy policy">
@@ -19,70 +19,73 @@
   <div class="wrap masthead__inner">
     <a class="brand" href="/">
       <svg viewBox="0 0 100 100" aria-hidden="true">
-        <path d="M28 30 L50 74" stroke="#e7eaef" stroke-width="12" stroke-linecap="round" fill="none"/>
-        <path d="M50 74 L72 30" stroke="#86a5ff" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M28 30 L50 74" stroke="#eceef1" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <path d="M50 74 L72 30" stroke="#7ea0ff" stroke-width="13" stroke-linecap="round" fill="none"/>
       </svg>
       <span>Veyl</span>
     </a>
     <nav>
-      <a href="#how" class="is-quiet">How it works</a>
-      <a href="#levels" class="is-quiet">What it won't say</a>
+      <a href="#method">How it works</a>
+      <a href="#scale">What it won't say</a>
+      <a href="#disclosure">Your data</a>
       <a href="/privacy/">Privacy</a>
-      <a href="https://github.com/dev-amjad-shaikh/Veyl">Source</a>
     </nav>
+    <a class="pill" href="https://github.com/dev-amjad-shaikh/Veyl#readme">Get Veyl</a>
   </div>
 </header>
 
 <main class="wrap doc">
   <div class="doc__head">
-    <p class="eyebrow">Veyl</p>
-    <h1 class="display">Privacy policy</h1>
-    <p class="lede">
-      Veyl is an extension that explains what a website is doing with your data. This describes
-      what Veyl does with <em>yours</em>, which is the question that matters more.
-    </p>
+    <p class="label">Veyl · Privacy</p>
+    <div>
+      <h1 class="display">Privacy policy</h1>
+      <p class="lede">
+        Veyl is an extension that explains what a website is doing with your data. This describes what
+        Veyl does with <em>yours</em>, which is the question that matters more.
+      </p>
+    </div>
   </div>
   <div class="doc__body">
-<p class="eyebrow">Last updated: 22 August 2026</p>
-<h2 class="display">The short version</h2>
+<p class="label">Last updated: 22 August 2026</p>
+<h2>The short version</h2>
 <p><strong>Veyl has no server.</strong> There is no account, no login, no backend, and no analytics. Nothing about your browsing is transmitted anywhere, because there is nowhere for it to go. The extension makes exactly one outbound network request, and it goes to the website you are already on, to fetch that site's own published privacy policy.</p>
-<h2 class="display">What Veyl processes, and where</h2>
+<h2>What Veyl processes, and where</h2>
 <p>Everything below happens on your device, in your browser.</p>
 <div class="table-wrap"><table><thead><tr><th>Data</th><th>Why Veyl needs it</th><th>Where it goes</th></tr></thead><tbody><tr><td>The address of the page you are on, and the addresses of the third-party resources it loads</td><td>To identify which tracking companies a page contacts</td><td>Held in memory for that tab only. Deleted when the tab closes. Never written to disk.</td></tr><tr><td>Cookie names, domains, expiry dates and flags for the site you are analysing and the domains it contacted</td><td>To list the cookies and explain what each is for</td><td>Held in memory for that tab only. Cookie <strong>values</strong> are examined in memory to judge whether they look like an identifier, and are never stored, logged or transmitted.</td></tr><tr><td>The names of keys in the site's <code>localStorage</code>, <code>sessionStorage</code> and IndexedDB</td><td>To detect identifiers that survive clearing your cookies</td><td>Held in memory for that tab only. Stored <strong>values</strong> are never retained.</td></tr><tr><td>Counts of calls to browser APIs used for fingerprinting</td><td>To report fingerprinting signals</td><td>Held in memory for that tab only.</td></tr><tr><td>The text of the site's published privacy policy</td><td>To summarise what the site says it does</td><td>Fetched by your browser from the site, without your cookies. Held in memory for the browsing session. Never uploaded.</td></tr><tr><td>Your settings and per-site protection choices</td><td>To remember what you asked for</td><td>Your browser profile, on this device.</td></tr><tr><td>Monthly totals, <strong>only if you switch them on</strong></td><td>To show you a monthly summary</td><td>Your browser profile, on this device. Counters only — see below.</td></tr></tbody></table></div>
-<h2 class="display">What Veyl never does</h2>
+<h2>What Veyl never does</h2>
 <ul><li><span>It never transmits your browsing history, page addresses, page content, cookies or any other personal data to Veyl or to anyone else.</span></li><li><span>It never sells or shares your data. There is no data to sell.</span></li><li><span>It never builds an advertising profile of you.</span></li><li><span>It never reads what you type, and never reads page content beyond link addresses used to find the privacy policy and the presence of a cookie banner.</span></li><li><span>It never contains analytics, crash reporting or telemetry of any kind, and there is no setting that would turn any on.</span></li><li><span>It never asks you to create an account.</span></li></ul>
-<h2 class="display">Privacy history</h2>
+<h2>Privacy history</h2>
 <p>Privacy history is <strong>off</strong> until you turn it on. When on, Veyl keeps running totals for the current calendar month, on your device only:</p>
 <ul><li><span>how many pages it analysed;</span></li><li><span>how many tracker requests it saw, and how many it blocked;</span></li><li><span>which companies came up, and on how many of your analysed pages;</span></li><li><span>how many pages fell into each exposure level.</span></li></ul>
 <p>It keeps <strong>no list of the sites you visited</strong> — no domains, no hashes of domains, no addresses, no timestamps and no per-visit records. Nothing stored could reconstruct where you have been. You can erase the totals at any time from Veyl's settings page, and they are cleared automatically at the start of each month.</p>
-<h2 class="display">Ask Veyl and the on-device model</h2>
+<h2>Ask Veyl and the on-device model</h2>
 <p>If Chrome provides its built-in on-device language model, Veyl can answer questions about a page in plain English. Veyl neither ships nor hosts a model: Chrome downloads and runs it locally on your computer.</p>
 <p>The model is given a summary of the findings already shown on your screen — the site name, the exposure levels, the services detected, the named cookies, what the policy says, and the list of things Veyl could not establish. It is <strong>not</strong> given the page address, the page path, the page content, or any access to your browser. Your question and that summary never leave your device.</p>
-<h2 class="display">Website access</h2>
+<h2>Website access</h2>
 <p>Veyl requests no access to any website when you install it. You grant access one site at a time from the Veyl icon, or to all sites from Veyl's settings page if you choose to. Chrome enforces that boundary. You can withdraw access at any time from <code>chrome://extensions</code> or from Veyl's settings page, and Veyl immediately stops observing those sites.</p>
-<h2 class="display">Permissions and why they exist</h2>
+<h2>Permissions and why they exist</h2>
 <ul><li><span><strong><code>storage</code></strong> — to save your settings and, if you enable it, the monthly totals.</span></li><li><span><strong><code>activeTab</code></strong> — to see which site you are on when you click the Veyl icon, so Veyl can name it and offer to analyse it.</span></li><li><span><strong><code>cookies</code></strong> — to read cookie metadata for the site you are analysing.</span></li><li><span><strong><code>webRequest</code></strong> — to observe, never to intercept, which domains a page contacts. Veyl cannot and does not read request or response contents.</span></li><li><span><strong><code>scripting</code></strong> — to run its analysis scripts on sites you have allowed.</span></li><li><span><strong><code>declarativeNetRequest</code></strong> — to block trackers when you turn protection on. Chrome applies these rules; Veyl does not inspect the requests.</span></li><li><span><strong>Host access (optional)</strong> — required by the above to work on a given site. Requested from you per site, never at install.</span></li></ul>
-<h2 class="display">Children</h2>
+<h2>Children</h2>
 <p>Veyl is not directed at children and collects nothing from anyone.</p>
-<h2 class="display">Changes</h2>
+<h2>Changes</h2>
 <p>If this policy changes, the new version will be published here with a new date, and any change that affects what Veyl does with your data will also appear in the extension's release notes.</p>
-<h2 class="display">Contact</h2>
+<h2>Contact</h2>
 <p>Questions or concerns: open an issue at <a href="https://github.com/dev-amjad-shaikh/Veyl">https://github.com/dev-amjad-shaikh/Veyl</a>.</p>
   </div>
 </main>
 
 <footer class="footer">
-  <div class="wrap footer__grid">
-    <p class="footer__note">
-      Veyl is a personal, non-commercial project.<br>
-      Nothing on this site tracks you.
-    </p>
-    <div class="footer__links">
-      <a href="/privacy/">Privacy policy</a>
-      <a href="https://github.com/dev-amjad-shaikh/Veyl/blob/main/docs/user-guide.md">User guide</a>
-      <a href="https://github.com/dev-amjad-shaikh/Veyl">Source</a>
-      <a href="https://github.com/dev-amjad-shaikh/Veyl/issues">Report a problem</a>
+  <div class="wrap">
+    <div class="footer__grid">
+      <p class="label">Personal, non-commercial project · Nothing on this site tracks you</p>
+      <div class="footer__links">
+        <a href="/privacy/">Privacy</a>
+        <a href="https://github.com/dev-amjad-shaikh/Veyl/blob/main/docs/user-guide.md">Guide</a>
+        <a href="https://github.com/dev-amjad-shaikh/Veyl">Source</a>
+        <a href="https://github.com/dev-amjad-shaikh/Veyl/issues">Report a problem</a>
+      </div>
     </div>
+    <p class="wordmark" aria-hidden="true">VEYL</p>
   </div>
 </footer>
 
