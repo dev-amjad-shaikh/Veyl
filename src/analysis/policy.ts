@@ -396,12 +396,27 @@ async function readDocument(url: string): Promise<string | null> {
   }
 }
 
-async function readFirst(candidates: string[]): Promise<{ url: string; text: string } | null> {
-  for (const url of candidates.slice(0, 3)) {
+/**
+ * Picks the candidate that actually parses.
+ *
+ * Length is a poor test of whether the right document was found: a "privacy
+ * settings" hub page passes it and yields nothing. Running Veyl across 42 real
+ * sites, this was the single biggest failure — the Guardian's policy runs to
+ * nearly 10,000 words, and Veyl was reading a 1,356-word page that produced no
+ * claims at all, then reporting the policy as silent. So each candidate is
+ * parsed, and the first that yields a claim wins; if none do, the longest is
+ * kept so the interface can still say a document was found and not understood.
+ */
+async function readBest(site: Site, candidates: string[]): Promise<{ url: string; text: string } | null> {
+  let fallback: { url: string; text: string } | null = null;
+
+  for (const url of candidates.slice(0, 4)) {
     const text = await readDocument(url);
-    if (text) return { url, text };
+    if (!text) continue;
+    if (analyzeText(text, site, url).claims.length > 0) return { url, text };
+    if (!fallback || text.length > fallback.text.length) fallback = { url, text };
   }
-  return null;
+  return fallback;
 }
 
 /**
@@ -419,7 +434,10 @@ export async function fetchPolicy(
   site: Site,
   candidates: { privacy: string[]; cookies: string[] }
 ): Promise<PolicyAnalysis> {
-  const [privacy, cookies] = await Promise.all([readFirst(candidates.privacy), readFirst(candidates.cookies)]);
+  const [privacy, cookies] = await Promise.all([
+    readBest(site, candidates.privacy),
+    readBest(site, candidates.cookies),
+  ]);
 
   const sources: PolicyAnalysis['sources'] = [];
   if (privacy) sources.push({ url: privacy.url, kind: 'privacy' });
@@ -442,8 +460,15 @@ export function guessPolicyUrls(pageUrl: string): { privacy: string[]; cookies: 
   try {
     const origin = new URL(pageUrl).origin;
     return {
-      privacy: [`${origin}/privacy`, `${origin}/privacy-policy`, `${origin}/legal/privacy`],
-      cookies: [`${origin}/cookie-policy`, `${origin}/cookies`, `${origin}/legal/cookies`],
+      privacy: [
+        `${origin}/privacy-policy`,
+        `${origin}/privacy`,
+        `${origin}/privacy-notice`,
+        `${origin}/legal/privacy`,
+        `${origin}/help/privacy-policy`,
+        `${origin}/about/privacy`,
+      ],
+      cookies: [`${origin}/cookie-policy`, `${origin}/cookies`, `${origin}/legal/cookies`, `${origin}/cookie-notice`],
     };
   } catch {
     return { privacy: [], cookies: [] };

@@ -1,101 +1,532 @@
 {
   "version": "2026-08-22",
   "organizations": [
-    { "id": "alphabet", "name": "Alphabet (Google)", "country": "US", "privacyPolicy": "https://policies.google.com/privacy" },
-    { "id": "google", "name": "Google", "parent": "alphabet", "country": "US", "privacyPolicy": "https://policies.google.com/privacy" },
-    { "id": "youtube", "name": "YouTube", "parent": "alphabet", "country": "US" },
-    { "id": "meta", "name": "Meta Platforms", "country": "US", "privacyPolicy": "https://www.facebook.com/privacy/policy" },
-    { "id": "microsoft", "name": "Microsoft", "country": "US", "privacyPolicy": "https://privacy.microsoft.com/privacystatement" },
-    { "id": "linkedin", "name": "LinkedIn", "parent": "microsoft", "country": "US" },
-    { "id": "xandr", "name": "Xandr", "parent": "microsoft", "country": "US" },
-    { "id": "amazon", "name": "Amazon", "country": "US", "privacyPolicy": "https://www.amazon.com/privacy" },
-    { "id": "adobe", "name": "Adobe", "country": "US", "privacyPolicy": "https://www.adobe.com/privacy/policy.html" },
-    { "id": "bytedance", "name": "ByteDance (TikTok)", "country": "CN", "privacyPolicy": "https://www.tiktok.com/legal/privacy-policy" },
-    { "id": "oracle", "name": "Oracle", "country": "US" },
-    { "id": "salesforce", "name": "Salesforce", "country": "US" },
-    { "id": "twilio", "name": "Twilio", "country": "US" },
-    { "id": "criteo", "name": "Criteo", "country": "FR", "privacyPolicy": "https://www.criteo.com/privacy/" },
-    { "id": "taboola", "name": "Taboola", "country": "IL" },
-    { "id": "outbrain", "name": "Outbrain", "country": "US" },
-    { "id": "tradedesk", "name": "The Trade Desk", "country": "US" },
-    { "id": "pubmatic", "name": "PubMatic", "country": "US" },
-    { "id": "magnite", "name": "Magnite", "country": "US" },
-    { "id": "indexexchange", "name": "Index Exchange", "country": "CA" },
-    { "id": "openx", "name": "OpenX", "country": "US" },
-    { "id": "quantcast", "name": "Quantcast", "country": "US" },
-    { "id": "comscore", "name": "Comscore", "country": "US" },
-    { "id": "nielsen", "name": "Nielsen", "country": "US" },
-    { "id": "contentsquare", "name": "Contentsquare", "country": "FR" },
-    { "id": "fullstory", "name": "FullStory", "country": "US" },
-    { "id": "mouseflow", "name": "Mouseflow", "country": "DK" },
-    { "id": "smartlook", "name": "Smartlook", "country": "CZ" },
-    { "id": "amplitude", "name": "Amplitude", "country": "US" },
-    { "id": "mixpanel", "name": "Mixpanel", "country": "US" },
-    { "id": "heap", "name": "Heap", "country": "US" },
-    { "id": "braze", "name": "Braze", "country": "US" },
-    { "id": "klaviyo", "name": "Klaviyo", "country": "US" },
-    { "id": "hubspot", "name": "HubSpot", "country": "US" },
-    { "id": "intercom", "name": "Intercom", "country": "US" },
-    { "id": "zendesk", "name": "Zendesk", "country": "US" },
-    { "id": "optimizely", "name": "Optimizely", "country": "US" },
-    { "id": "vwo", "name": "VWO (Wingify)", "country": "IN" },
-    { "id": "yandex", "name": "Yandex", "country": "RU" },
-    { "id": "snap", "name": "Snap", "country": "US" },
-    { "id": "pinterest", "name": "Pinterest", "country": "US" },
-    { "id": "x", "name": "X (Twitter)", "country": "US" },
-    { "id": "reddit", "name": "Reddit", "country": "US" },
-    { "id": "cloudflare", "name": "Cloudflare", "country": "US" },
-    { "id": "akamai", "name": "Akamai", "country": "US" },
-    { "id": "fastly", "name": "Fastly", "country": "US" },
-    { "id": "stripe", "name": "Stripe", "country": "US" },
-    { "id": "paypal", "name": "PayPal", "country": "US" },
-    { "id": "adyen", "name": "Adyen", "country": "NL" },
-    { "id": "hcaptcha", "name": "hCaptcha (Intuition Machines)", "country": "US" },
-    { "id": "human", "name": "HUMAN Security", "country": "US" },
-    { "id": "datadome", "name": "DataDome", "country": "FR" },
-    { "id": "sift", "name": "Sift", "country": "US" },
-    { "id": "okta", "name": "Okta", "country": "US" },
-    { "id": "onetrust", "name": "OneTrust", "country": "US" },
-    { "id": "trustarc", "name": "TrustArc", "country": "US" },
-    { "id": "usercentrics", "name": "Usercentrics", "country": "DE" },
-    { "id": "sourcepoint", "name": "Sourcepoint", "country": "US" },
-    { "id": "liveramp", "name": "LiveRamp", "country": "US" },
-    { "id": "id5", "name": "ID5", "country": "FR" },
-    { "id": "lotame", "name": "Lotame", "country": "US" },
-    { "id": "doubleverify", "name": "DoubleVerify", "country": "US" },
-    { "id": "ias", "name": "Integral Ad Science", "country": "US" },
-    { "id": "nextroll", "name": "NextRoll (AdRoll)", "country": "US" },
-    { "id": "rtbhouse", "name": "RTB House", "country": "PL" },
-    { "id": "medianet", "name": "Media.net", "country": "AE" },
-    { "id": "sharethrough", "name": "Sharethrough", "country": "CA" },
-    { "id": "teads", "name": "Teads", "country": "LU" },
-    { "id": "impact", "name": "Impact.com", "country": "US" },
-    { "id": "awin", "name": "Awin", "country": "DE" },
-    { "id": "cj", "name": "CJ Affiliate (Publicis)", "country": "US" },
-    { "id": "rakuten", "name": "Rakuten Advertising", "country": "JP" },
-    { "id": "newrelic", "name": "New Relic", "country": "US" },
-    { "id": "sentry", "name": "Sentry (Functional Software)", "country": "US" },
-    { "id": "datadog", "name": "Datadog", "country": "US" },
-    { "id": "segment", "name": "Segment", "parent": "twilio", "country": "US" },
-    { "id": "tealium", "name": "Tealium", "country": "US" },
-    { "id": "chartbeat", "name": "Chartbeat", "country": "US" },
-    { "id": "parsely", "name": "Parse.ly (Automattic)", "country": "US" },
-    { "id": "automattic", "name": "Automattic", "country": "US" },
-    { "id": "cloudinary", "name": "Cloudinary", "country": "IL" },
-    { "id": "jsdelivr", "name": "jsDelivr", "country": "SI" },
-    { "id": "unpkg", "name": "unpkg", "country": "US" },
-    { "id": "bing", "name": "Microsoft Advertising", "parent": "microsoft", "country": "US" },
-    { "id": "yahoo", "name": "Yahoo", "country": "US" },
-    { "id": "spotify", "name": "Spotify", "country": "SE" },
-    { "id": "vimeo", "name": "Vimeo", "country": "US" },
-    { "id": "hotjar", "name": "Hotjar", "parent": "contentsquare", "country": "MT" },
-    { "id": "clarity", "name": "Microsoft Clarity", "parent": "microsoft", "country": "US" },
-    { "id": "kochava", "name": "Kochava", "country": "US" },
-    { "id": "branch", "name": "Branch Metrics", "country": "US" },
-    { "id": "appsflyer", "name": "AppsFlyer", "country": "IL" },
-    { "id": "bugsnag", "name": "Bugsnag (SmartBear)", "country": "US" },
-    { "id": "launchdarkly", "name": "LaunchDarkly", "country": "US" },
-    { "id": "algolia", "name": "Algolia", "country": "FR" },
-    { "id": "typekit", "name": "Adobe Fonts", "parent": "adobe", "country": "US" }
+    {
+      "id": "alphabet",
+      "name": "Alphabet (Google)",
+      "country": "US",
+      "privacyPolicy": "https://policies.google.com/privacy"
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "parent": "alphabet",
+      "country": "US",
+      "privacyPolicy": "https://policies.google.com/privacy"
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "parent": "alphabet",
+      "country": "US"
+    },
+    {
+      "id": "meta",
+      "name": "Meta Platforms",
+      "country": "US",
+      "privacyPolicy": "https://www.facebook.com/privacy/policy"
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "country": "US",
+      "privacyPolicy": "https://privacy.microsoft.com/privacystatement"
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "parent": "microsoft",
+      "country": "US"
+    },
+    {
+      "id": "xandr",
+      "name": "Xandr",
+      "parent": "microsoft",
+      "country": "US"
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "country": "US",
+      "privacyPolicy": "https://www.amazon.com/privacy"
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe",
+      "country": "US",
+      "privacyPolicy": "https://www.adobe.com/privacy/policy.html"
+    },
+    {
+      "id": "bytedance",
+      "name": "ByteDance (TikTok)",
+      "country": "CN",
+      "privacyPolicy": "https://www.tiktok.com/legal/privacy-policy"
+    },
+    {
+      "id": "oracle",
+      "name": "Oracle",
+      "country": "US"
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "country": "US"
+    },
+    {
+      "id": "twilio",
+      "name": "Twilio",
+      "country": "US"
+    },
+    {
+      "id": "criteo",
+      "name": "Criteo",
+      "country": "FR",
+      "privacyPolicy": "https://www.criteo.com/privacy/"
+    },
+    {
+      "id": "taboola",
+      "name": "Taboola",
+      "country": "IL"
+    },
+    {
+      "id": "outbrain",
+      "name": "Outbrain",
+      "country": "US"
+    },
+    {
+      "id": "tradedesk",
+      "name": "The Trade Desk",
+      "country": "US"
+    },
+    {
+      "id": "pubmatic",
+      "name": "PubMatic",
+      "country": "US"
+    },
+    {
+      "id": "magnite",
+      "name": "Magnite",
+      "country": "US"
+    },
+    {
+      "id": "indexexchange",
+      "name": "Index Exchange",
+      "country": "CA"
+    },
+    {
+      "id": "openx",
+      "name": "OpenX",
+      "country": "US"
+    },
+    {
+      "id": "quantcast",
+      "name": "Quantcast",
+      "country": "US"
+    },
+    {
+      "id": "comscore",
+      "name": "Comscore",
+      "country": "US"
+    },
+    {
+      "id": "nielsen",
+      "name": "Nielsen",
+      "country": "US"
+    },
+    {
+      "id": "contentsquare",
+      "name": "Contentsquare",
+      "country": "FR"
+    },
+    {
+      "id": "fullstory",
+      "name": "FullStory",
+      "country": "US"
+    },
+    {
+      "id": "mouseflow",
+      "name": "Mouseflow",
+      "country": "DK"
+    },
+    {
+      "id": "smartlook",
+      "name": "Smartlook",
+      "country": "CZ"
+    },
+    {
+      "id": "amplitude",
+      "name": "Amplitude",
+      "country": "US"
+    },
+    {
+      "id": "mixpanel",
+      "name": "Mixpanel",
+      "country": "US"
+    },
+    {
+      "id": "heap",
+      "name": "Heap",
+      "country": "US"
+    },
+    {
+      "id": "braze",
+      "name": "Braze",
+      "country": "US"
+    },
+    {
+      "id": "klaviyo",
+      "name": "Klaviyo",
+      "country": "US"
+    },
+    {
+      "id": "hubspot",
+      "name": "HubSpot",
+      "country": "US"
+    },
+    {
+      "id": "intercom",
+      "name": "Intercom",
+      "country": "US"
+    },
+    {
+      "id": "zendesk",
+      "name": "Zendesk",
+      "country": "US"
+    },
+    {
+      "id": "optimizely",
+      "name": "Optimizely",
+      "country": "US"
+    },
+    {
+      "id": "vwo",
+      "name": "VWO (Wingify)",
+      "country": "IN"
+    },
+    {
+      "id": "yandex",
+      "name": "Yandex",
+      "country": "RU"
+    },
+    {
+      "id": "snap",
+      "name": "Snap",
+      "country": "US"
+    },
+    {
+      "id": "pinterest",
+      "name": "Pinterest",
+      "country": "US"
+    },
+    {
+      "id": "x",
+      "name": "X (Twitter)",
+      "country": "US"
+    },
+    {
+      "id": "reddit",
+      "name": "Reddit",
+      "country": "US"
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "country": "US"
+    },
+    {
+      "id": "akamai",
+      "name": "Akamai",
+      "country": "US"
+    },
+    {
+      "id": "fastly",
+      "name": "Fastly",
+      "country": "US"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "country": "US"
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "country": "US"
+    },
+    {
+      "id": "adyen",
+      "name": "Adyen",
+      "country": "NL"
+    },
+    {
+      "id": "hcaptcha",
+      "name": "hCaptcha (Intuition Machines)",
+      "country": "US"
+    },
+    {
+      "id": "human",
+      "name": "HUMAN Security",
+      "country": "US"
+    },
+    {
+      "id": "datadome",
+      "name": "DataDome",
+      "country": "FR"
+    },
+    {
+      "id": "sift",
+      "name": "Sift",
+      "country": "US"
+    },
+    {
+      "id": "okta",
+      "name": "Okta",
+      "country": "US"
+    },
+    {
+      "id": "onetrust",
+      "name": "OneTrust",
+      "country": "US"
+    },
+    {
+      "id": "trustarc",
+      "name": "TrustArc",
+      "country": "US"
+    },
+    {
+      "id": "usercentrics",
+      "name": "Usercentrics",
+      "country": "DE"
+    },
+    {
+      "id": "sourcepoint",
+      "name": "Sourcepoint",
+      "country": "US"
+    },
+    {
+      "id": "liveramp",
+      "name": "LiveRamp",
+      "country": "US"
+    },
+    {
+      "id": "id5",
+      "name": "ID5",
+      "country": "FR"
+    },
+    {
+      "id": "lotame",
+      "name": "Lotame",
+      "country": "US"
+    },
+    {
+      "id": "doubleverify",
+      "name": "DoubleVerify",
+      "country": "US"
+    },
+    {
+      "id": "ias",
+      "name": "Integral Ad Science",
+      "country": "US"
+    },
+    {
+      "id": "nextroll",
+      "name": "NextRoll (AdRoll)",
+      "country": "US"
+    },
+    {
+      "id": "rtbhouse",
+      "name": "RTB House",
+      "country": "PL"
+    },
+    {
+      "id": "medianet",
+      "name": "Media.net",
+      "country": "AE"
+    },
+    {
+      "id": "sharethrough",
+      "name": "Sharethrough",
+      "country": "CA"
+    },
+    {
+      "id": "teads",
+      "name": "Teads",
+      "country": "LU"
+    },
+    {
+      "id": "impact",
+      "name": "Impact.com",
+      "country": "US"
+    },
+    {
+      "id": "awin",
+      "name": "Awin",
+      "country": "DE"
+    },
+    {
+      "id": "cj",
+      "name": "CJ Affiliate (Publicis)",
+      "country": "US"
+    },
+    {
+      "id": "rakuten",
+      "name": "Rakuten Advertising",
+      "country": "JP"
+    },
+    {
+      "id": "newrelic",
+      "name": "New Relic",
+      "country": "US"
+    },
+    {
+      "id": "sentry",
+      "name": "Sentry (Functional Software)",
+      "country": "US"
+    },
+    {
+      "id": "datadog",
+      "name": "Datadog",
+      "country": "US"
+    },
+    {
+      "id": "segment",
+      "name": "Segment",
+      "parent": "twilio",
+      "country": "US"
+    },
+    {
+      "id": "tealium",
+      "name": "Tealium",
+      "country": "US"
+    },
+    {
+      "id": "chartbeat",
+      "name": "Chartbeat",
+      "country": "US"
+    },
+    {
+      "id": "parsely",
+      "name": "Parse.ly (Automattic)",
+      "country": "US"
+    },
+    {
+      "id": "automattic",
+      "name": "Automattic",
+      "country": "US"
+    },
+    {
+      "id": "cloudinary",
+      "name": "Cloudinary",
+      "country": "IL"
+    },
+    {
+      "id": "jsdelivr",
+      "name": "jsDelivr",
+      "country": "SI"
+    },
+    {
+      "id": "unpkg",
+      "name": "unpkg",
+      "country": "US"
+    },
+    {
+      "id": "bing",
+      "name": "Microsoft Advertising",
+      "parent": "microsoft",
+      "country": "US"
+    },
+    {
+      "id": "yahoo",
+      "name": "Yahoo",
+      "country": "US"
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "country": "SE"
+    },
+    {
+      "id": "vimeo",
+      "name": "Vimeo",
+      "country": "US"
+    },
+    {
+      "id": "hotjar",
+      "name": "Hotjar",
+      "parent": "contentsquare",
+      "country": "MT"
+    },
+    {
+      "id": "clarity",
+      "name": "Microsoft Clarity",
+      "parent": "microsoft",
+      "country": "US"
+    },
+    {
+      "id": "kochava",
+      "name": "Kochava",
+      "country": "US"
+    },
+    {
+      "id": "branch",
+      "name": "Branch Metrics",
+      "country": "US"
+    },
+    {
+      "id": "appsflyer",
+      "name": "AppsFlyer",
+      "country": "IL"
+    },
+    {
+      "id": "bugsnag",
+      "name": "Bugsnag (SmartBear)",
+      "country": "US"
+    },
+    {
+      "id": "launchdarkly",
+      "name": "LaunchDarkly",
+      "country": "US"
+    },
+    {
+      "id": "algolia",
+      "name": "Algolia",
+      "country": "FR"
+    },
+    {
+      "id": "typekit",
+      "name": "Adobe Fonts",
+      "parent": "adobe",
+      "country": "US"
+    },
+    {
+      "id": "permutive",
+      "name": "Permutive",
+      "country": "GB"
+    },
+    {
+      "id": "dotmetrics",
+      "name": "Dotmetrics",
+      "country": "HR"
+    },
+    {
+      "id": "piano",
+      "name": "Piano",
+      "country": "US"
+    },
+    {
+      "id": "adnami",
+      "name": "Adnami",
+      "country": "DK"
+    },
+    {
+      "id": "confiant",
+      "name": "Confiant",
+      "country": "US"
+    },
+    {
+      "id": "sailthru",
+      "name": "Sailthru (Marigold)",
+      "country": "US"
+    }
   ]
 }

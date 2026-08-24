@@ -9,7 +9,8 @@
         "googlesyndication.com",
         "2mdn.net",
         "googleadservices.com",
-        "g.doubleclick.net"
+        "g.doubleclick.net",
+        "googletagservices.com"
       ],
       "name": "Google Ads & Ad Manager",
       "org": "google",
@@ -2649,6 +2650,151 @@
         "spotify.com",
         "scdn.co"
       ]
+    },
+    {
+      "id": "permutive",
+      "domains": [
+        "permutive.com",
+        "permutive.app"
+      ],
+      "name": "Permutive",
+      "org": "permutive",
+      "category": "advertising",
+      "purposes": [
+        "audience-building",
+        "advertising",
+        "behavioral-profiling"
+      ],
+      "dataTypes": [
+        "pages-visited",
+        "persistent-id",
+        "advertising-id"
+      ],
+      "mechanisms": [
+        "script",
+        "first-party-cookie"
+      ],
+      "summary": "Builds audience segments from what you read on a publisher's site, so advertisers can target them.",
+      "confidence": "high"
+    },
+    {
+      "id": "dotmetrics",
+      "domains": [
+        "dotmetrics.net"
+      ],
+      "name": "Dotmetrics",
+      "org": "dotmetrics",
+      "category": "analytics",
+      "purposes": [
+        "analytics",
+        "audience-building"
+      ],
+      "dataTypes": [
+        "pages-visited",
+        "persistent-id"
+      ],
+      "mechanisms": [
+        "script",
+        "third-party-cookie"
+      ],
+      "summary": "Measures audiences across many sites for media ratings.",
+      "confidence": "high"
+    },
+    {
+      "id": "piano-audience",
+      "domains": [
+        "cxense.com",
+        "cxpublic.com",
+        "piano.io"
+      ],
+      "name": "Piano Audience (Cxense)",
+      "org": "piano",
+      "category": "advertising",
+      "purposes": [
+        "audience-building",
+        "personalization",
+        "analytics"
+      ],
+      "dataTypes": [
+        "pages-visited",
+        "persistent-id",
+        "advertising-id"
+      ],
+      "mechanisms": [
+        "script",
+        "third-party-cookie"
+      ],
+      "summary": "Profiles what you read to segment you for advertising and personalised content.",
+      "confidence": "high"
+    },
+    {
+      "id": "adnami",
+      "domains": [
+        "adnami.io"
+      ],
+      "name": "Adnami",
+      "org": "adnami",
+      "category": "advertising",
+      "purposes": [
+        "advertising",
+        "attribution"
+      ],
+      "dataTypes": [
+        "pages-visited",
+        "device-info"
+      ],
+      "mechanisms": [
+        "script"
+      ],
+      "summary": "Serves high-impact display advertising and measures whether you looked at it.",
+      "confidence": "high"
+    },
+    {
+      "id": "confiant",
+      "domains": [
+        "confiant-integrations.net",
+        "confiant.com"
+      ],
+      "name": "Confiant",
+      "org": "confiant",
+      "category": "advertising",
+      "purposes": [
+        "security",
+        "advertising"
+      ],
+      "dataTypes": [
+        "device-info",
+        "pages-visited"
+      ],
+      "mechanisms": [
+        "script"
+      ],
+      "summary": "Checks the adverts on a page for malicious or misleading creative.",
+      "confidence": "medium"
+    },
+    {
+      "id": "sailthru",
+      "domains": [
+        "sail-horizon.com",
+        "sail-personalize.com"
+      ],
+      "name": "Sailthru",
+      "org": "sailthru",
+      "category": "customer-engagement",
+      "purposes": [
+        "personalization",
+        "analytics"
+      ],
+      "dataTypes": [
+        "pages-visited",
+        "hashed-identity"
+      ],
+      "mechanisms": [
+        "script",
+        "first-party-cookie"
+      ],
+      "summary": "Ties what you read to your email address so messages can be personalised.",
+      "confidence": "medium"
     }
   ]
 }

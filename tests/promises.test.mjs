@@ -16,6 +16,8 @@ import {
   DEFAULT_SETTINGS,
   looksLikeIdentifier,
   siteOf,
+  assessExposure,
+  buildInventory,
 } from './.build/harness.mjs';
 
 test('nothing a page needs to work is ever blockable', () => {
@@ -158,4 +160,30 @@ test('registrable domains are resolved with the real public suffix list', () => 
   assert.equal(siteOf('https://a.b.example.com/x'), 'example.com');
   assert.equal(siteOf('https://cdn.example.com/x'), 'example.com');
   assert.equal(siteOf('https://ads.doubleclick.net/x'), 'doubleclick.net');
+});
+
+/**
+ * Calibrated against 42 real sites: a processor read appears on 48% of them and
+ * a battery read on 33%, because ordinary code touches both. Neither, alone or
+ * together, is evidence of fingerprinting.
+ */
+test('the weak fingerprint signals cannot on their own imply fingerprinting', () => {
+  const at = (kinds) =>
+    assessExposure(
+      'shop.example',
+      buildInventory({
+        visitId: 'v', tabId: 1, site: 'shop.example', url: 'https://shop.example/', startedAt: 0, updatedAt: 0,
+        consent: { bannerSeen: false, decidedAt: null }, domains: {}, cookies: [], storage: [], policyLinks: [],
+        signals: kinds.map((kind) => ({ kind, calls: 3, firstSeenAt: 0 })),
+      }),
+      null,
+      true
+    ).dimensions.find((d) => d.dimension === 'fingerprinting').level;
+
+  assert.equal(at(['hardware-profile']), 'low');
+  assert.equal(at(['battery']), 'low');
+  assert.equal(at(['hardware-profile', 'battery']), 'low', 'two weak signals are still weak');
+  // Drawing hidden text and reading the pixels back has no innocent explanation.
+  assert.equal(at(['canvas-readback']), 'medium');
+  assert.equal(at(['canvas-readback', 'audio-fingerprint']), 'high');
 });

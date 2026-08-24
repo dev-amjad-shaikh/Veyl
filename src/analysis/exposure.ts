@@ -40,14 +40,24 @@ export const SIGNAL_LABELS: Record<string, string> = {
   'storage-access': 'Requested access to its own cross-site storage',
 };
 
+/**
+ * Weighted by how much each signal actually distinguishes.
+ *
+ * Measured across 42 real sites: a processor and memory read fires on 48% of
+ * them and a battery read on 33%, because ordinary code — video players sizing
+ * worker pools, layout libraries — reads those too. A signal present on half the
+ * web is not evidence of fingerprinting, so on its own neither can push this
+ * dimension past "low". Drawing hidden text and reading the pixels back has no
+ * such innocent explanation, and is weighted accordingly.
+ */
 const FINGERPRINT_WEIGHT: Record<string, number> = {
   'canvas-readback': 35,
   'audio-fingerprint': 30,
   'font-enumeration': 25,
-  'webgl-parameters': 20,
-  'device-enumeration': 15,
-  'hardware-profile': 10,
-  battery: 10,
+  'webgl-parameters': 18,
+  'device-enumeration': 12,
+  'hardware-profile': 8,
+  battery: 8,
 };
 
 /** Internal only. The number is a means of ordering evidence, never a product claim. */

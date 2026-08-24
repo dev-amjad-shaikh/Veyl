@@ -163,6 +163,20 @@ const POLICY_MATCHERS: { kind: PolicyLink['kind']; re: RegExp }[] = [
   { kind: 'terms', re: /terms|conditions/i },
 ];
 
+/**
+ * "Privacy policy" is the document; "privacy settings" is a preferences screen
+ * that reads as a policy link and contains none of the text. Sorting the strong
+ * wording first means the service worker tries the real document before the hub.
+ */
+const STRONG_POLICY = /\b(privacy|cookie)\s*(policy|notice|statement)\b/i;
+const WEAK_POLICY = /\b(settings|preferences|choices|centre|center|hub|dashboard|manage)\b/i;
+
+function linkStrength(link: PolicyLink): number {
+  if (STRONG_POLICY.test(link.label) || STRONG_POLICY.test(link.url)) return 0;
+  if (WEAK_POLICY.test(link.label)) return 2;
+  return 1;
+}
+
 function findPolicyLinks(): PolicyLink[] {
   const found = new Map<string, PolicyLink>();
   const anchors = document.querySelectorAll<HTMLAnchorElement>('a[href]');
@@ -178,7 +192,9 @@ function findPolicyLinks(): PolicyLink[] {
     }
   }
   const order: Record<PolicyLink['kind'], number> = { privacy: 0, cookies: 1, 'do-not-sell': 2, terms: 3 };
-  return [...found.values()].sort((a, b) => order[a.kind] - order[b.kind]).slice(0, 8);
+  return [...found.values()]
+    .sort((a, b) => order[a.kind] - order[b.kind] || linkStrength(a) - linkStrength(b))
+    .slice(0, 8);
 }
 
 // --- consent banner -------------------------------------------------------
