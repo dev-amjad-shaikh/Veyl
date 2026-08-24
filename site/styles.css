@@ -270,6 +270,18 @@ td { color: var(--text-2); }
 td:first-child { color: var(--text); }
 tr:last-child td { border-bottom: 0; }
 
+/* ── small utilities ───────────────────────────────────────────────────── */
+/* Used instead of style attributes so the site can ship a content security
+   policy with no 'unsafe-inline' — which is worth more here than the brevity. */
+
+.stack-sm { margin-top: 1rem; }
+.stack-md { margin-top: 1.5rem; }
+.stack-xs { margin-top: 0.75rem; }
+.narrow { max-width: 60ch; }
+.narrow-wide { max-width: 64ch; }
+.is-ok { color: var(--none); }
+.code-inline { font-family: var(--mono); font-size: 0.9em; }
+
 /* ── entrance ──────────────────────────────────────────────────────────── */
 
 .rise { animation: rise 800ms var(--ease) both; }
