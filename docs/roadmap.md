@@ -50,6 +50,81 @@ to be considerably more reliable than it is, and getting it wrong means silently
 consenting on someone's behalf. Not until the observation layer has been proven on real
 sites at scale.
 
+## Considered next
+
+Recorded so the reasoning survives, not as commitments. Each entry names what it
+would reuse, because anything needing new infrastructure needs a much better
+argument in a project with no server.
+
+### Needs nothing new
+
+**Session recording on a page that takes a card or a password.** Veyl already
+identifies session-replay services and already knows what is on the page. A
+recorder running on a checkout is a specific, common and serious problem — those
+tools capture form fields unless the site explicitly masks them, and sites
+routinely forget. Highest severity of anything on this list, and every piece of
+evidence is already collected.
+
+**What happens when you hand over an email.** At the moment a signup form
+appears, Veyl knows which marketing platform it posts to, what the policy permits,
+and that `hubspotutk` or `__kla_id` will link the browsing it has already watched
+to the contact record about to be created. Nobody says this at the moment it
+matters.
+
+**Read the consent banner before you answer it.** The page probe already runs in
+the page's world, where `__tcfapi` lives. How many vendors "accept all" enables,
+and how many clicks away "reject all" is, are both knowable before the person
+chooses — which is the only time the information is any use.
+
+**Where the form actually posts.** A login form whose action is a different
+origin, or plain HTTP, is worth a sentence. Pure observation, no external data.
+
+**Cookie exposure.** `httpOnly`, `sameSite` and `looksLikeIdentifier` are already
+recorded, and so is the number of third-party scripts on the page. A stable
+identifier readable by every one of them is the mechanism by which one
+compromised script becomes account takeover — stated from evidence, without
+claiming an incident occurred.
+
+### Needs a shipped index
+
+The tracker graph is the precedent: ship the data, look it up locally, never ask
+a server about the site someone is on. Anything here that cannot work that way
+should not be built.
+
+**Pre-analysed policies for common sites.** Covers policies behind JavaScript, a
+login or an unfriendly CDN, which today become "unknown". Carries change history,
+so "this policy changed and here is the sentence that appeared" needs no memory of
+where the user has been. Index-derived claims must be labelled as such — read
+previously is not the same as read just now.
+
+**Breach history for the companies observed.** The Have I Been Pwned breach
+catalogue is key-free, non-personal and CC BY 4.0, so it can ship with
+attribution. Its data classes map onto Veyl's own vocabulary, which makes the
+useful comparison possible: what a site asks for now, against what it has already
+lost. Never "your data was breached" — Veyl cannot know that — and never a causal
+claim about tracking. Coverage is thin for ad tech and better for first-party
+sites, so it is a feature about the site rather than its trackers.
+
+**Content Credentials.** The honest form of "is this AI" is not detection, which
+is unreliable and would be pure guesswork in a product built to refuse guessing.
+It is provenance: C2PA manifests are signed, verifiable and increasingly present.
+Reporting what a manifest says, and reporting nothing where none exists, is
+already Veyl's register. Note that this widens the extension's single purpose and
+would need the store listing updated deliberately rather than by drift.
+
+### Rejected
+
+**Detecting AI-generated text.** High false-positive rates, biased against
+non-native writers, and inference with no evidence trail — the one thing this
+product refuses everywhere else.
+
+**Any per-site lookup against a Veyl server.** It would mean receiving the domains
+people visit, which contradicts the privacy policy, the store disclosure and the
+only real differentiator.
+
+**Checking whether a person's own data was breached.** Requires an email address
+and a server-side query. Not a trade-off worth discussing.
+
 ## Known limitations
 
 - **Cross-origin frames.** Code inside a frame Veyl is not injected into is invisible.
