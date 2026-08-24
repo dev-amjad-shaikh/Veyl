@@ -5,7 +5,7 @@
  *
  *   node scripts/build-site.mjs
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 
 const escape = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -15,6 +15,17 @@ const inline = (t) =>
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     .replace(/&lt;(https?:\/\/[^&]+)&gt;/g, '<a href="$1">$1</a>');
+
+function frontMatter(markdown) {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) return { meta: {}, body: markdown };
+  const meta = {};
+  for (const line of match[1].split('\n')) {
+    const at = line.indexOf(':');
+    if (at > 0) meta[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+  }
+  return { meta, body: markdown.slice(match[0].length) };
+}
 
 function render(markdown) {
   const lines = markdown.split('\n', 1).length ? markdown.split('\n').slice(1) : [];
@@ -38,6 +49,13 @@ function render(markdown) {
       const head = rows[0].map((c) => `<th>${inline(c)}</th>`).join('');
       const body = rows.slice(2).map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('');
       out.push(`<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`);
+      continue;
+    }
+
+    if (line.startsWith('> ')) {
+      const quote = [];
+      while (i < lines.length && lines[i].startsWith('> ')) { quote.push(lines[i].slice(2)); i++; }
+      out.push(`<blockquote>${inline(quote.join(' '))}</blockquote>`);
       continue;
     }
 
@@ -103,3 +121,48 @@ ${footer}`
 );
 
 console.log('site/privacy/index.html generated from PRIVACY.md');
+
+// --- articles -------------------------------------------------------------
+
+const slugs = (await readdir('content')).filter((f) => f.endsWith('.md'));
+const written = [];
+
+for (const file of slugs) {
+  const slug = file.replace(/\.md$/, '');
+  const { meta, body } = frontMatter(await readFile(`content/${file}`, 'utf8'));
+  // Parsed as a plain date: "2026-08-24" is a day, not midnight UTC, and
+  // rendering it in a negative offset would silently publish it a day early.
+  const [y, m, d] = (meta.date ?? '').split('-').map(Number);
+  const date = new Date(y, (m || 1) - 1, d || 1).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  const articleHead = head
+    .replace(/<title>[^<]*<\/title>/, `<title>${meta.title} — Veyl</title>`)
+    .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${meta.subtitle}">`)
+    .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${meta.title}">`)
+    .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${meta.subtitle}">`)
+    .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="https://noveyl.work/writing/${slug}/">`)
+    .replace('href="../styles.css"', 'href="../../styles.css"')
+    .replace('href="../assets/icon.png"', 'href="../../assets/icon.png"');
+
+  await mkdir(`site/writing/${slug}`, { recursive: true });
+  await writeFile(
+    `site/writing/${slug}/index.html`,
+    `${articleHead}<main class="wrap doc">
+  <div class="doc__head">
+    <p class="label">${date}</p>
+    <h1 class="h1">${meta.title}</h1>
+    <p class="lede">${meta.subtitle}</p>
+  </div>
+  <article class="doc__body">
+${render(body)}
+  </article>
+</main>
+
+${footer}`
+  );
+  written.push(`site/writing/${slug}/index.html`);
+}
+
+for (const f of written) console.log(f + ' generated');

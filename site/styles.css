@@ -293,3 +293,17 @@ tr:last-child td { border-bottom: 0; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* --- long-form articles --------------------------------------------------- */
+
+.doc__body blockquote {
+  margin: 1.75rem 0;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--edge-bright);
+  font-size: clamp(1.05rem, 1.9vw, 1.25rem);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.doc__body > p:first-of-type { font-size: 1.0625rem; }
+.doc__body h2 + p { margin-top: 1.25rem; }
