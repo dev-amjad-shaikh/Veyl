@@ -25,7 +25,11 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
    * Running Veyl over 42 sites is what surfaced it: the three loudest
    * discrepancies all came from documents where nothing at all was extracted.
    */
-  const understood = policy.claims.length > 0;
+  // Claims about two different subjects is weak evidence that the extractor
+  // worked on this document, but it is evidence. One claim is not: Which?'s
+  // policy yielded a single claim from 686 words and then appeared to deny
+  // sharing data with anyone.
+  const understood = new Set(policy.claims.map((claim) => claim.topic)).size >= 2;
 
   const ads = inventory.advertising;
   const preConsent = inventory.preConsentTrackers;

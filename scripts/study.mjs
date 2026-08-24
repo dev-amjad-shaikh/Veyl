@@ -42,7 +42,13 @@ const SITES = [
 const withTimeout = (promise, ms, fallback) =>
   Promise.race([promise, new Promise((r) => setTimeout(() => r(fallback), ms))]);
 
-const { context, dispose } = await launch(EXTENSION, { hosts: ['example.invalid'] });
+// Headless Chromium announces itself in the user agent and a good number of
+// sites serve it a challenge page instead of the site. Measuring what a bot is
+// shown is not measuring what a person is shown, so present as ordinary Chrome.
+const USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36';
+
+const { context, dispose } = await launch(EXTENSION, { hosts: ['example.invalid'], userAgent: USER_AGENT });
 const results = [];
 
 try {
@@ -60,6 +66,15 @@ try {
     try {
       await withTimeout(page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25_000 }), 26_000, null);
       await page.waitForTimeout(SETTLE_MS);
+
+      // Whether the page actually rendered, so a challenge page is never counted
+      // as a site with no trackers.
+      const render = await page.evaluate(() => ({
+        text: (document.body?.innerText ?? '').trim().length,
+        links: document.querySelectorAll('a[href]').length,
+        policyLinks: [...document.querySelectorAll('a[href]')].filter((a) =>
+          /privacy|cookie/i.test(a.textContent + ' ' + a.getAttribute('href'))).length,
+      })).catch(() => ({ text: 0, links: 0, policyLinks: 0 }));
       const tabId = await page.evaluate(() => 0).then(async () => {
         const tabs = await control.evaluate(async (u) => {
           const all = await chrome.tabs.query({});
@@ -82,6 +97,7 @@ try {
           url,
           site: report.site,
           status: 'ok',
+          render,
           exposure: report.exposure.overall,
           confidence: report.exposure.confidence,
           trackingServices: tracking.length,

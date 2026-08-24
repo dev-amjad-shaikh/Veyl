@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   EXPLAINER_INSTRUCTIONS,
   asPlainText,
+  emptyAnalysis,
   analyzeText,
   assessExposure,
   buildDigest,
@@ -313,4 +314,29 @@ test('a policy that yielded no claims cannot be said to omit anything', () => {
   assert.ok(replay, 'the session recorder is still reported');
   assert.equal(replay.severity, 'note');
   assert.match(replay.says, /could not read/i);
+});
+
+test('one claim from a thin document is not enough to allege an omission', () => {
+  const thin = {
+    ...emptyAnalysis('shop.example', 'https://shop.example/privacy', 'ok'),
+    status: 'ok',
+    words: 686,
+    claims: [{ topic: 'cookies', assertion: 'Says third parties set cookies through this site.', quote: 'Some third-party cookies are set.', confidence: 'high' }],
+  };
+  for (const finding of compare(buildInventory(TRACKED), thin)) {
+    assert.ok(
+      !(finding.severity === 'discrepancy' && /does not (say|mention)|never mentions/i.test(finding.says)),
+      `alleged an omission from a document it barely parsed: "${finding.says}"`
+    );
+  }
+
+  const understood = {
+    ...thin,
+    claims: [
+      ...thin.claims,
+      { topic: 'sharing', assertion: 'Allows your information to be shared with third parties such as vendors, affiliates or partners.', quote: 'We may share your information with vendors.', confidence: 'high' },
+      { topic: 'collection', assertion: 'Says it collects your browsing activity.', quote: 'We collect browsing history.', confidence: 'high' },
+    ],
+  };
+  assert.ok(compare(buildInventory(TRACKED), understood).length > 0, 'a properly parsed policy still produces findings');
 });
