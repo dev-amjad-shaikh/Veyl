@@ -160,7 +160,9 @@ should be able to check for themselves are documented separately and deliberatel
 ## The site
 
 `site/` is the project's website — a static page and the privacy policy, no build step.
-Open `site/index.html` directly, or drop the folder on any host.
+Open `site/index.html` directly, or drop the folder on any host. `vercel.json` serves it
+statically with a content security policy of `default-src 'none'`, which the site can
+honour because it has no scripts at all.
 
 ```bash
 npm run site-shots   # capture the extension's panels in dark mode for the page
