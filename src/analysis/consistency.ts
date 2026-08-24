@@ -14,6 +14,19 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
   if (!policy || policy.status !== 'ok') return [];
   const findings: ConsistencyFinding[] = [];
 
+  /**
+   * Whether the document was actually understood.
+   *
+   * Fetching a page and extracting nothing from it is not the same as a policy
+   * that stays silent — it usually means the real policy is rendered by script,
+   * lives behind a different link, or is worded in a way the extractor missed.
+   * Saying "the policy does not mention X" on that basis manufactures a finding
+   * out of a failure to read, which is the one thing this engine must not do.
+   * Running Veyl over 42 sites is what surfaced it: the three loudest
+   * discrepancies all came from documents where nothing at all was extracted.
+   */
+  const understood = policy.claims.length > 0;
+
   const ads = inventory.advertising;
   const preConsent = inventory.preConsentTrackers;
   const companies = [...inventory.companies.values()];
@@ -57,7 +70,7 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
     });
   }
 
-  if (policy.sharesForAdvertising === 'unstated' && policy.targetedAdvertising === 'unstated' && ads.length > 0) {
+  if (understood && policy.sharesForAdvertising === 'unstated' && policy.targetedAdvertising === 'unstated' && ads.length > 0) {
     findings.push({
       severity: 'discrepancy',
       topic: 'sharing',
@@ -83,7 +96,7 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
     }
   }
 
-  if (policy.sharesWithThirdParties === 'unstated' && companies.length > 2) {
+  if (understood && policy.sharesWithThirdParties === 'unstated' && companies.length > 2) {
     findings.push({
       severity: 'discrepancy',
       topic: 'sharing',
@@ -94,7 +107,7 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
     });
   }
 
-  if (policy.retention.stance === 'unstated' && inventory.cookies.longestLifetimeDays >= 365) {
+  if (understood && policy.retention.stance === 'unstated' && inventory.cookies.longestLifetimeDays >= 365) {
     const years = Math.round((inventory.cookies.longestLifetimeDays / 365) * 10) / 10;
     findings.push({
       severity: 'note',
@@ -108,12 +121,16 @@ export function compare(inventory: Inventory, policy: PolicyAnalysis | null): Co
 
   if (inventory.sessionReplay.length > 0) {
     const mentionsReplay = policy.claims.some((c) => /session|record|replay|heatmap/i.test(c.quote));
+    // The recorder is observed either way; only the claim about the policy is
+    // withheld when the policy was not understood.
     findings.push({
-      severity: mentionsReplay ? 'note' : 'discrepancy',
+      severity: mentionsReplay || !understood ? 'note' : 'discrepancy',
       topic: 'collection',
-      says: mentionsReplay
-        ? 'The policy refers to recording how you use the site.'
-        : 'The policy does not mention recording your session.',
+      says: !understood
+        ? 'Veyl could not read this site’s policy well enough to say whether it mentions session recording.'
+        : mentionsReplay
+          ? 'The policy refers to recording how you use the site.'
+          : 'The policy does not mention recording your session.',
       saysIsQuote: false,
       observed: `${inventory.sessionReplay.map((s) => s.name).join(', ')} can replay your visit as a video, including what you type unless the site excludes those fields.`,
       explanation: 'Session recording captures far more than page views, so it is worth stating plainly.',

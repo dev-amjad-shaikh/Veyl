@@ -287,3 +287,30 @@ test('the evidence layer never even records a cookie value', () => {
     assert.ok(!('value' in cookie), `${cookie.name} carries a value into the interface`);
   }
 });
+
+/**
+ * Found by running Veyl over 42 real sites: on three of them it fetched a page,
+ * extracted nothing at all, and then reported that the policy "does not mention"
+ * sharing — a finding built from a failure to read.
+ */
+test('a policy that yielded no claims cannot be said to omit anything', () => {
+  const unreadable = {
+    ...analyzeText('This page has almost no substance to it whatsoever, and nothing matches.', 'shop.example', 'https://shop.example/privacy'),
+    status: 'ok',
+  };
+  assert.equal(unreadable.claims.length, 0, 'fixture must extract nothing, or the test proves nothing');
+
+  const findings = compare(buildInventory(TRACKED), unreadable);
+  for (const finding of findings) {
+    assert.ok(
+      !(finding.severity === 'discrepancy' && /does not (say|mention)|never mentions/i.test(finding.says)),
+      `claimed an omission from a policy it could not read: "${finding.says}"`
+    );
+  }
+
+  // The observed half still stands: a session recorder was seen either way.
+  const replay = findings.find((f) => f.topic === 'collection');
+  assert.ok(replay, 'the session recorder is still reported');
+  assert.equal(replay.severity, 'note');
+  assert.match(replay.says, /could not read/i);
+});
