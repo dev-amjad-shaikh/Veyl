@@ -101,3 +101,5 @@ release notes.
 ## Contact
 
 Questions or concerns: open an issue at <https://github.com/dev-amjad-shaikh/Veyl>.
+
+Veyl is published on the Chrome Web Store at <https://chromewebstore.google.com/detail/dnedpkkepgoclefdfeblncgfjpmebbno>.

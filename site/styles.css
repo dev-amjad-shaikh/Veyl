@@ -133,6 +133,10 @@ img { max-width: 100%; height: auto; display: block; }
 .hero .label { margin-bottom: 1.5rem; }
 .hero .lede { margin-top: 1.75rem; }
 .hero__actions { display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; margin-top: 2.25rem; }
+.fineprint {
+  margin-top: 1.15rem; font-family: var(--mono); font-size: 0.6875rem;
+  letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase;
+}
 
 .stage { position: relative; margin-top: clamp(3rem, 6vw, 4.5rem); display: flex; justify-content: center; align-items: flex-end; gap: 1.25rem; }
 .stage__panel {

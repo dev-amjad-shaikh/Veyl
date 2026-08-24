@@ -8,7 +8,11 @@ them.
 
 ## Installing it
 
-1. Download the latest build, or run `npm install && npm run build` in a clone.
+**[Add Veyl to Chrome](https://chromewebstore.google.com/detail/dnedpkkepgoclefdfeblncgfjpmebbno)** from the Chrome Web Store.
+
+If you would rather build it yourself:
+
+1. Run `npm install && npm run build` in a clone.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
 3. Click **Load unpacked** and choose the `dist` folder.
 

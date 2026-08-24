@@ -4,6 +4,8 @@
 data, reads what it says it does, compares the two, and explains the result in
 normal language.
 
+**[Add it to Chrome](https://chromewebstore.google.com/detail/dnedpkkepgoclefdfeblncgfjpmebbno)** · [noveyl.work](https://noveyl.work)
+
 It runs entirely in your browser. There is no account, no server, and no telemetry —
 Veyl has nowhere to send your browsing even if it wanted to.
 
@@ -95,11 +97,17 @@ any page you have not allowed — enforced by Chrome, not by our good intentions
 
 ## Install it
 
+**[Add Veyl to Chrome](https://chromewebstore.google.com/detail/dnedpkkepgoclefdfeblncgfjpmebbno)** — free, on the Chrome Web Store.
+
+Or build it yourself, which is the point of it being open:
+
 ```bash
 npm install && npm run build
 ```
 
-Then load `dist/` at `chrome://extensions` with Developer mode on.
+Then load `dist/` at `chrome://extensions` with Developer mode on. The published
+build is reproducible from this source — clone, `npm ci && npm run build`, and the
+files match the uploaded package byte for byte.
 
 ## Verify it
 
