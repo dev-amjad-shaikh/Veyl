@@ -41,6 +41,9 @@ try {
 
   await popup.screenshot({ path: `${OUT}/shot-report.png`, clip: { x: 0, y: 0, width: 400, height: 640 } });
 
+  await popup.locator('.section').filter({ has: popup.locator('.harvest') }).first()
+    .screenshot({ path: `${OUT}/shot-harvest.png` });
+
   await popup.locator('.ask__chip').first().click();
   await popup.waitForFunction(() => document.querySelector('.ask__answer')?.textContent?.includes('work.'));
   await popup.locator('.section', { hasText: 'Ask Veyl' }).screenshot({ path: `${OUT}/shot-ask.png` });
@@ -52,6 +55,34 @@ try {
 
   await popup.locator('.section', { hasText: 'What they say vs what they do' }).screenshot({ path: `${OUT}/shot-compare.png` });
   await popup.locator('.section', { hasText: 'Protection on' }).screenshot({ path: `${OUT}/shot-protection.png` });
+
+  // The corner note, on the fixture page that raised it.
+  const noticed = await context.newPage();
+  await noticed.setViewportSize({ width: 1100, height: 760 });
+  await noticed.goto(origin, { waitUntil: 'load' });
+  await noticed.waitForSelector('#veyl-notice[data-veyl-card]', { timeout: 25_000 }).catch(() => {});
+  await noticed.waitForTimeout(900);
+  // The card is in a closed shadow root, so its box comes from the renderer
+  // rather than a selector. Clipping to it keeps the page out of the picture.
+  const cdp = await noticed.context().newCDPSession(noticed);
+  const { root } = await cdp.send('DOM.getDocument', { depth: -1, pierce: true });
+  const walk = function* (n) {
+    yield n;
+    for (const c of [...(n.children ?? []), ...(n.shadowRoots ?? [])]) yield* walk(c);
+  };
+  let clip = null;
+  for (const node of walk(root)) {
+    const attributes = node.attributes ?? [];
+    if (attributes.includes('class') && attributes[attributes.indexOf('class') + 1] === 'card') {
+      const { model } = await cdp.send('DOM.getBoxModel', { nodeId: node.nodeId });
+      const [x1, y1, x2, , , y3] = model.border;
+      clip = { x: x1 - 12, y: y1 - 12, width: x2 - x1 + 24, height: y3 - y1 + 24 };
+      break;
+    }
+  }
+  await cdp.detach();
+  await noticed.screenshot({ path: `${OUT}/shot-notice.png`, ...(clip ? { clip } : {}) });
+  await noticed.close();
 
   const gate = await context.newPage();
   await gate.setViewportSize({ width: 400, height: 640 });
