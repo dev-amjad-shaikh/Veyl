@@ -76,12 +76,24 @@ try {
     if (attributes.includes('class') && attributes[attributes.indexOf('class') + 1] === 'card') {
       const { model } = await cdp.send('DOM.getBoxModel', { nodeId: node.nodeId });
       const [x1, y1, x2, , , y3] = model.border;
-      clip = { x: x1 - 12, y: y1 - 12, width: x2 - x1 + 24, height: y3 - y1 + 24 };
+      clip = { x: x1 - 26, y: y1 - 26, width: x2 - x1 + 52, height: y3 - y1 + 52 };
       break;
     }
   }
   await cdp.detach();
-  await noticed.screenshot({ path: `${OUT}/shot-notice.png`, ...(clip ? { clip } : {}) });
+
+  // Capture the card alone, on transparency, so the site's own background
+  // shows through instead of a white rectangle from the page behind it. The
+  // notice host is a child of <html>, not <body>, so hiding the body leaves it.
+  await noticed.addStyleTag({
+    content: 'html, body { background: transparent !important; } body { visibility: hidden !important; }',
+  });
+  await noticed.waitForTimeout(200);
+  await noticed.screenshot({
+    path: `${OUT}/shot-notice.png`,
+    omitBackground: true,
+    ...(clip ? { clip } : {}),
+  });
   await noticed.close();
 
   const gate = await context.newPage();
