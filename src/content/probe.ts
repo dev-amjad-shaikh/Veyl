@@ -231,4 +231,90 @@ if (typeof doc['requestStorageAccess'] === 'function') {
   wrap(doc, 'requestStorageAccess', () => note('storage-access'));
 }
 
+// --- what trackers are set up to take from forms --------------------------
+//
+// An advertising pixel that harvests form fields has to be told which fields to
+// take, and it keeps that instruction in the page so its own code can read it.
+// So can we — which means Veyl can say what a page is set up to collect before
+// anyone types a character, without reading a character.
+//
+// Nothing here touches a form, a field, or a value. It reads the tracker's
+// configuration and nothing else. When the configuration cannot be found the
+// answer is "unknown", never "none".
+
+const HARVEST_EVENT = 'veyl:page-harvest';
+
+/** Meta's field codes. `cn` and `country` are both seen in the wild. */
+const META_FIELDS: Record<string, string> = {
+  em: 'email',
+  ph: 'phone',
+  fn: 'first-name',
+  ln: 'last-name',
+  ct: 'city',
+  st: 'state',
+  zp: 'postcode',
+  ge: 'gender',
+  db: 'date-of-birth',
+  cn: 'country',
+  country: 'country',
+  external_id: 'site-id',
+};
+
+function readMetaHarvest(): { entryId: string; accountId: string; fields: string[] }[] {
+  const out: { entryId: string; accountId: string; fields: string[] }[] = [];
+  try {
+    const fbq = (window as unknown as Record<string, unknown>)['fbq'] as
+      | Record<string, unknown>
+      | undefined;
+    const modules = fbq?.['__fbeventsResolvedModules'] as Record<string, unknown> | undefined;
+    const store = modules?.['SignalsFBEventsConfigStore'] as Record<string, unknown> | undefined;
+    const configs = (store?.['_configStore'] as Record<string, unknown> | undefined)?.[
+      'automaticMatching'
+    ] as Record<string, { selectedMatchKeys?: unknown }> | undefined;
+    if (!configs) return out;
+
+    for (const [accountId, config] of Object.entries(configs).slice(0, 8)) {
+      const keys = config?.selectedMatchKeys;
+      if (!Array.isArray(keys)) continue;
+      const fields = [
+        ...new Set(
+          keys
+            .filter((key): key is string => typeof key === 'string')
+            .map((key) => META_FIELDS[key])
+            .filter((field): field is string => Boolean(field))
+        ),
+      ];
+      if (fields.length > 0 && /^[0-9]{6,24}$/.test(accountId)) {
+        out.push({ entryId: 'meta-pixel', accountId, fields });
+      }
+    }
+  } catch {
+    // The page can shape these objects however it likes. Finding nothing is a
+    // valid answer; guessing is not.
+  }
+  return out;
+}
+
+let lastHarvest = '';
+
+function reportHarvest(): void {
+  const configs = readMetaHarvest();
+  if (configs.length === 0) return;
+  const payload = JSON.stringify(configs);
+  if (payload === lastHarvest) return; // nothing new to say
+  lastHarvest = payload;
+  try {
+    window.dispatchEvent(new CustomEvent(HARVEST_EVENT, { detail: payload }));
+  } catch {
+    /* the page may have been torn down */
+  }
+}
+
+// The pixel loads its configuration well after document_start, and a tag
+// manager can add another one minutes later. A handful of looks costs nothing
+// and stops after the page has settled.
+for (const delay of [1200, 3000, 6000, 12_000]) {
+  setTimeout(reportHarvest, delay);
+}
+
 window.addEventListener('pagehide', flush, { capture: true });

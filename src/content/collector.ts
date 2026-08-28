@@ -6,10 +6,25 @@
  * Signals arriving from the page world are untrusted input — a page controls
  * that world. They are validated here before being forwarded.
  */
-import type { ApiSignalKind, PolicyLink, StorageObservation } from '../domain/types';
-import type { PageReportPayload } from '../domain/messages';
+import type { ApiSignalKind, HarvestField, PolicyLink, StorageObservation } from '../domain/types';
+import type { PageCuePayload, PageReportPayload, TabMessage } from '../domain/messages';
+import { hideHairline, showCard, showHairline } from './notice';
 
 const EVENT = 'veyl:page-signals';
+const HARVEST_EVENT = 'veyl:page-harvest';
+const HARVEST_FIELDS = new Set<HarvestField>([
+  'email',
+  'phone',
+  'first-name',
+  'last-name',
+  'city',
+  'state',
+  'postcode',
+  'gender',
+  'date-of-birth',
+  'country',
+  'site-id',
+]);
 const SIGNAL_KINDS = new Set<ApiSignalKind>([
   'canvas-readback',
   'webgl-parameters',
@@ -66,6 +81,43 @@ window.addEventListener(EVENT, (event) => {
   if (signals.length > 0) report({ signals });
 });
 
+// --- form-harvesting configuration from the page world --------------------
+//
+// Same trust rule as the signals above: the page owns that world, so nothing
+// arriving from it is believed until it has been checked into shape here.
+
+window.addEventListener(HARVEST_EVENT, (event) => {
+  const detail = (event as CustomEvent).detail;
+  if (typeof detail !== 'string' || detail.length > 8000) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(detail);
+  } catch {
+    return;
+  }
+  if (!Array.isArray(parsed)) return;
+
+  const harvestConfigs = parsed
+    .filter(
+      (c): c is { entryId: string; accountId: string; fields: string[] } =>
+        typeof c === 'object' && c !== null &&
+        typeof (c as { entryId: unknown }).entryId === 'string' &&
+        typeof (c as { accountId: unknown }).accountId === 'string' &&
+        Array.isArray((c as { fields: unknown }).fields)
+    )
+    .slice(0, 8)
+    .map((c) => ({
+      entryId: c.entryId.slice(0, 40),
+      accountId: c.accountId.slice(0, 32),
+      fields: c.fields
+        .filter((f): f is HarvestField => typeof f === 'string' && HARVEST_FIELDS.has(f as HarvestField))
+        .slice(0, 12),
+    }))
+    .filter((c) => c.fields.length > 0);
+
+  if (harvestConfigs.length > 0) report({ harvestConfigs });
+});
+
 if (!isTopFrame) {
   // Sub-frames relay signals only; storage and policy links belong to the page.
 } else {
@@ -92,6 +144,134 @@ if (!isTopFrame) {
     watchConsent();
   });
   window.addEventListener('pagehide', () => report({ storage: inventoryStorage() }), { capture: true });
+}
+
+// --- what Veyl draws on the page ------------------------------------------
+//
+// The service worker decides what is true; this decides only when to say it.
+// The "before you type" card waits for a form field to be focused, because
+// that is the moment the warning is worth anything — and knowing that a field
+// received focus is not the same as knowing what goes into it.
+
+let cue: PageCuePayload | null = null;
+
+function fieldFocused(event: Event): void {
+  const target = event.target as HTMLElement | null;
+  if (!target) return;
+  const tag = target.tagName;
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !target.isContentEditable) return;
+  // Not a field anyone types personal data into.
+  const type = (target as HTMLInputElement).type;
+  if (tag === 'INPUT' && ['checkbox', 'radio', 'submit', 'button', 'hidden', 'range', 'file'].includes(type)) return;
+  drawCard();
+}
+
+function drawCard(): void {
+  if (!cue) return;
+
+  // Something left the page. The rarest finding and the only one worth
+  // interrupting for, so it outranks everything else and ignores the threshold.
+  const sent = cue.sent[0];
+  if (sent && cue.cue !== 'never') {
+    const fields = [...new Set(cue.sent.flatMap((s) => s.fields))];
+    const names = cue.sent.map((s) => s.name).join(' and ');
+    const allBlocked = cue.sent.every((s) => s.blocked);
+    showCard(
+      `sent:${names}:${fields.join(',')}`,
+      {
+        tone: allBlocked ? 'ok' : 'warn',
+        title: allBlocked
+          ? 'Veyl stopped something personal leaving this page'
+          : 'Something personal just left this page',
+        body: allBlocked
+          ? `${names} tried to send your ${list(fields)}. Veyl blocked the request.`
+          : `${names} sent your ${list(fields)}.`,
+        footnote:
+          'Veyl read the name of the parameter that carried it, never what it carried.',
+      },
+      mute
+    );
+    return;
+  }
+
+  // The level itself, said out loud. A line at the top of the page turned out
+  // to be too quiet to register, and the level is the one thing a person wants
+  // to know without going and looking for it.
+  const wanted = cue.cue === 'medium' ? ['medium', 'high'] : cue.cue === 'high' ? ['high'] : [];
+  if (wanted.includes(cue.level)) {
+    const { trackers, companies, cookies, blocked } = cue.counts;
+    const tally = [
+      trackers > 0 ? `${trackers} tracking service${trackers === 1 ? '' : 's'}` : null,
+      companies > 0 ? `${companies} compan${companies === 1 ? 'y' : 'ies'} contacted` : null,
+      cookies > 0 ? `${cookies} cookie${cookies === 1 ? '' : 's'}` : null,
+      blocked > 0 ? `${blocked} blocked by Veyl` : null,
+    ].filter(Boolean) as string[];
+
+    showCard(
+      `level:${cue.level}`,
+      {
+        tone: 'warn',
+        title: `${cue.level === 'high' ? 'High' : 'Medium'} exposure on this site`,
+        body: cue.headline,
+        // Naming what drove it is what makes this a finding rather than a scare.
+        fields: cue.drivers,
+        footnote: tally.join(' · '),
+      },
+      mute
+    );
+    return;
+  }
+
+  const declared = cue.declared[0];
+  if (declared && cue.formNotice) {
+    showCard(
+      `declared:${declared.name}`,
+      {
+        tone: 'warn',
+        title: 'This page is set up to read what you type',
+        body: `${declared.name} is configured to collect these from any form here:`,
+        fields: declared.fields,
+        footnote: "Read from the tracker's own configuration, not from this site's privacy policy.",
+      },
+      mute
+    );
+  }
+}
+
+function list(items: string[]): string {
+  if (items.length <= 2) return items.join(' and ');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+function mute(): void {
+  try {
+    void chrome.runtime.sendMessage({ type: 'mute-site' });
+  } catch {
+    /* extension reloaded */
+  }
+}
+
+if (isTopFrame) {
+  chrome.runtime.onMessage.addListener((message: TabMessage) => {
+    if (message?.type !== 'page-cue') return;
+    cue = message.payload;
+
+    const wanted =
+      cue.cue === 'medium'
+        ? ['medium', 'high']
+        : cue.cue === 'high'
+          ? ['high']
+          : [];
+    // The line stays as the quiet version, for after the card is closed.
+    if (wanted.includes(cue.level)) showHairline(cue.level);
+    else hideHairline();
+
+    // Neither the level nor something already sent waits for a field to be
+    // focused; only the "before you type" warning does.
+    if (cue.sent.length > 0 || wanted.includes(cue.level)) drawCard();
+  });
+
+  document.addEventListener('focusin', fieldFocused, { capture: true, passive: true });
 }
 
 function whenReady(fn: () => void): void {

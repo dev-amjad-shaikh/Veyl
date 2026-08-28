@@ -1,9 +1,35 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import type { HistoryTotals } from '../domain/types';
-import { ALL_SITE_PATTERNS, PROTECTION_DESCRIPTIONS, type ProtectionLevel, type Settings } from '../domain/settings';
+import {
+  ALL_SITE_PATTERNS,
+  PROTECTION_DESCRIPTIONS,
+  type PageCue,
+  type ProtectionLevel,
+  type Settings,
+} from '../domain/settings';
 import { send } from '../domain/messages';
 import { CATEGORY_LABELS } from '../analysis/labels';
 import { availability, type ModelAvailability } from '../model/language-model';
+
+/** The wording is the setting: each line says how often it will actually fire. */
+const PAGE_CUES: { value: PageCue; name: string; hint: string }[] = [
+  { value: 'never', name: 'Never', hint: 'Veyl draws nothing on any page.' },
+  {
+    value: 'sent',
+    name: 'Only when something leaves the page',
+    hint: 'Silent until Veyl sees personal data being sent. The rarest, and the most worth interrupting for.',
+  },
+  {
+    value: 'high',
+    name: 'High exposure',
+    hint: 'A note in the corner saying what makes this page high, and the above. Close it and a thin line at the top of the page is all that stays.',
+  },
+  {
+    value: 'medium',
+    name: 'Medium and above',
+    hint: 'The same, from medium upwards. Useful for a week of paying attention, tiring as a permanent setting.',
+  },
+];
 
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -147,6 +173,49 @@ export function App() {
             aria-checked={settings.policyAnalysis}
             aria-label="Read published privacy policies"
             onClick={() => void patch({ policyAnalysis: !settings.policyAnalysis })}
+          />
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card__title">On the page</h2>
+        <p class="card__body">
+          The toolbar icon always carries the exposure level. This is the extra, drawn on the page itself —
+          because an icon in the corner is not something anyone notices while reading. Every note can be
+          closed, and closing it on a site keeps it closed there until you restart your browser.
+        </p>
+
+        <div class="choices" role="radiogroup" aria-label="Show a cue on the page">
+          {PAGE_CUES.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              class="choice"
+              role="radio"
+              aria-checked={settings.pageCue === option.value}
+              onClick={() => void patch({ pageCue: option.value })}
+            >
+              <span class="choice__name">{option.name}</span>
+              <span class="choice__hint">{option.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="toggle-row" style="margin-top: 8px">
+          <div class="toggle-row__text">
+            <div class="toggle-row__name">Warn before you type into a form</div>
+            <div class="toggle-row__hint">
+              When a tracker on the page is configured to take what you type, say so when you focus a field.
+              Veyl reads the tracker's setting, never the field.
+            </div>
+          </div>
+          <button
+            type="button"
+            class="switch"
+            role="switch"
+            aria-checked={settings.formNotice}
+            aria-label="Warn before you type into a form"
+            onClick={() => void patch({ formNotice: !settings.formNotice })}
           />
         </div>
       </section>

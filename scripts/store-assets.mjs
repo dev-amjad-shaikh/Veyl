@@ -27,19 +27,25 @@ const PANELS = [
     capture: 'top',
   },
   {
-    file: 'screenshot-2-evidence.png',
+    file: 'screenshot-2-harvest.png',
+    headline: 'What a page is set up<br>to read from you',
+    sub: 'Advertising pixels can be configured to take your email, name, phone and postcode from any form. Veyl reads that setting — before you type anything.',
+    capture: 'harvest',
+  },
+  {
+    file: 'screenshot-3-evidence.png',
     headline: 'Every claim shows<br>its evidence',
     sub: 'Observed, declared, inferred or unknown. Open any line to see exactly what it rests on. “None seen” is never dressed up as “none”.',
     capture: 'exposure',
   },
   {
-    file: 'screenshot-3-consistency.png',
+    file: 'screenshot-4-consistency.png',
     headline: 'What they say,<br>against what they do',
     sub: 'Veyl reads the site’s own privacy policy on your device and checks it against what actually happened while you were there.',
     capture: 'consistency',
   },
   {
-    file: 'screenshot-4-ask.png',
+    file: 'screenshot-6-ask-spare.png',
     headline: 'Ask in your<br>own words',
     sub: 'Answered by Chrome’s on-device model from the evidence on screen. Your question never leaves your computer — Veyl has no server.',
     capture: 'ask',
@@ -94,8 +100,14 @@ async function captureExtension() {
     await popup.goto(`chrome-extension://${id}/popup/index.html?tab=${tabId}`);
     await popup.waitForSelector('.header__site', { timeout: 20_000 });
     await popup.waitForSelector('.finding--discrepancy', { timeout: 20_000 });
+    await popup.mouse.move(2, 2);
 
-    await popup.screenshot({ path: `${SHOTS}/top.png`, clip: { x: 0, y: 0, width: 396, height: 300 } });
+    const topOf = async () => {
+      const header = await popup.locator('.header').boundingBox();
+      const first = await popup.locator('.section').first().boundingBox();
+      return { x: 0, y: 0, width: 396, height: Math.ceil(header.height + first.height) };
+    };
+    await popup.screenshot({ path: `${SHOTS}/top.png`, clip: await topOf() });
 
     // The user guide uses the panels unadorned, so the pictures match what a
     // person sees. Everything here comes from the synthetic test fixture — no
@@ -103,7 +115,10 @@ async function captureExtension() {
     const guide = async (file, selector) => {
       await popup.locator(selector).first().screenshot({ path: `${GUIDE}/${file}` });
     };
-    await popup.screenshot({ path: `${GUIDE}/report-top.png`, clip: { x: 0, y: 0, width: 396, height: 300 } });
+    await popup.screenshot({ path: `${GUIDE}/report-top.png`, clip: await topOf() });
+    await popup.locator('.section').filter({ has: popup.locator('.harvest') }).first()
+      .screenshot({ path: `${SHOTS}/harvest.png` });
+    await guide('harvest.png', '.section:has(.harvest)');
     await guide('services.png', '.section:has(.tag--functional)');
     await guide('cookies.png', '.section:has-text("Cookies (")');
     await guide('policy.png', '.section:has(.stances)');
@@ -120,6 +135,7 @@ async function captureExtension() {
     // Open the exposure disclosures and one evidence trail beneath them.
     await popup.locator('.dimensions .disclosure__summary').first().click();
     await popup.locator('.statement__evidence summary').first().click();
+    await popup.mouse.move(2, 2);
     await popup.waitForTimeout(300);
     await popup.locator('.section', { hasText: 'Privacy exposure' }).screenshot({ path: `${SHOTS}/exposure.png` });
     await popup.locator('.section', { hasText: 'Privacy exposure' }).screenshot({ path: `${GUIDE}/exposure.png` });

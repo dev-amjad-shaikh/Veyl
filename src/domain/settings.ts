@@ -14,6 +14,19 @@ export const ALL_SITE_PATTERNS = ['http://*/*', 'https://*/*'];
  */
 export type ProtectionLevel = 'off' | 'balanced' | 'strict';
 
+/**
+ * What Veyl is allowed to draw on the page itself.
+ *
+ * The toolbar icon always carries the level; this is the extra, and it exists
+ * because an icon in a corner is not something anyone notices while reading.
+ *  never   — nothing is drawn on any page.
+ *  sent    — only when personal data was seen leaving. The rarest, and the one
+ *            thing worth interrupting for.
+ *  high    — the above, and a hairline at the top of a high-exposure page.
+ *  medium  — the above, from medium upwards.
+ */
+export type PageCue = 'never' | 'sent' | 'high' | 'medium';
+
 export interface Settings {
   onboardedAt: number | null;
   protection: ProtectionLevel;
@@ -28,6 +41,13 @@ export interface Settings {
   policyAnalysis: boolean;
   /** Send Global Privacy Control on requests. */
   globalPrivacyControl: boolean;
+  /** What Veyl draws on the page itself, beyond the toolbar icon. */
+  pageCue: PageCue;
+  /**
+   * Say so, on the page, when a tracker here is configured to take what you
+   * type into a form — before you type it.
+   */
+  formNotice: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -37,6 +57,8 @@ export const DEFAULT_SETTINGS: Settings = {
   historyEnabled: false,
   policyAnalysis: true,
   globalPrivacyControl: true,
+  pageCue: 'high',
+  formNotice: true,
 };
 
 export function effectiveProtection(settings: Settings, site: Site): ProtectionLevel {

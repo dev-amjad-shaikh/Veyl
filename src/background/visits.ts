@@ -10,6 +10,9 @@ import type {
   ApiSignalKind,
   CookieObservation,
   DomainObservation,
+  HarvestConfig,
+  HarvestField,
+  HarvestTransmission,
   PolicyLink,
   RequestKind,
   Site,
@@ -18,10 +21,13 @@ import type {
 } from '../domain/types';
 import { hostInfo } from '../domain/site';
 import { identifyRequest } from '../knowledge/graph';
+import { fieldsInUrl } from '../knowledge/harvest';
 import { dropVisit, loadVisit, saveVisit } from './store';
 
 const MAX_DOMAINS = 300;
 const MAX_HOSTS_PER_DOMAIN = 8;
+const MAX_HARVEST_CONFIGS = 8;
+const MAX_HARVEST_TRANSMISSIONS = 40;
 
 const live = new Map<number, VisitEvidence>();
 const dirty = new Set<number>();
@@ -61,6 +67,8 @@ export function startVisit(tabId: number, url: string): VisitEvidence | null {
     cookies: [],
     storage: [],
     signals: [],
+    harvestConfigs: [],
+    harvestTransmissions: [],
     policyLinks: [],
   };
   live.set(tabId, visit);
@@ -78,7 +86,12 @@ export async function get(tabId: number): Promise<VisitEvidence | null> {
   const inMemory = live.get(tabId);
   if (inMemory) return inMemory;
   const restored = await loadVisit(tabId);
-  if (restored) live.set(tabId, restored);
+  if (!restored) return null;
+  // A visit written by an earlier version has no harvest evidence. Absent is
+  // not empty, but an empty list reads as "nothing seen yet", which is true.
+  restored.harvestConfigs ??= [];
+  restored.harvestTransmissions ??= [];
+  live.set(tabId, restored);
   return restored;
 }
 
@@ -101,20 +114,22 @@ const KIND_BY_RESOURCE_TYPE: Record<string, RequestKind> = {
   beacon: 'ping',
 };
 
+/** Returns true when this request told us something worth re-rendering for. */
 export function recordRequest(
   tabId: number,
   url: string,
   resourceType: string,
   timeStamp: number
-): void {
+): boolean {
   const visit = live.get(tabId);
-  if (!visit) return;
+  if (!visit) return false;
   const info = hostInfo(url);
-  if (!info || info.site === visit.site) return;
-  if (Object.keys(visit.domains).length >= MAX_DOMAINS && !visit.domains[info.site]) return;
+  if (!info || info.site === visit.site) return false;
+  if (Object.keys(visit.domains).length >= MAX_DOMAINS && !visit.domains[info.site]) return false;
 
   const kind = KIND_BY_RESOURCE_TYPE[resourceType] ?? 'other';
   let observation = visit.domains[info.site];
+  const firstSighting = !observation;
   if (!observation) {
     observation = {
       domain: info.site,
@@ -136,7 +151,38 @@ export function recordRequest(
   }
   const entry = identifyRequest(url, info.hostname);
   if (entry && !observation.serviceIds.includes(entry.id)) observation.serviceIds.push(entry.id);
+  const harvested = recordHarvestTransmissions(visit, info.site, entry?.id ?? null, url);
   touch(visit);
+  return firstSighting || harvested;
+}
+
+/**
+ * A request that names personal data in its own parameters is the strongest
+ * evidence Veyl can hold: not "this company is known to do X" but "this left
+ * your browser, going there, while you were on this page".
+ */
+function recordHarvestTransmissions(
+  visit: VisitEvidence,
+  domain: Site,
+  entryId: string | null,
+  url: string
+): boolean {
+  let added = false;
+  for (const { field, parameter } of fieldsInUrl(url)) {
+    const existing = visit.harvestTransmissions.find((t) => t.domain === domain && t.field === field);
+    if (existing) continue;
+    if (visit.harvestTransmissions.length >= MAX_HARVEST_TRANSMISSIONS) return added;
+    visit.harvestTransmissions.push({
+      domain,
+      ...(entryId ? { entryId } : {}),
+      field,
+      parameter,
+      blocked: false,
+      firstSeenAt: Date.now(),
+    });
+    added = true;
+  }
+  return added;
 }
 
 export function recordBlocked(tabId: number, url: string): void {
@@ -147,6 +193,9 @@ export function recordBlocked(tabId: number, url: string): void {
   const observation = visit.domains[info.site];
   if (!observation) return;
   observation.blocked += 1;
+  for (const transmission of visit.harvestTransmissions) {
+    if (transmission.domain === info.site) transmission.blocked = true;
+  }
   touch(visit);
 }
 
@@ -162,6 +211,7 @@ export function recordPageReport(
   report: {
     storage?: StorageObservation[];
     signals?: { kind: ApiSignalKind; calls: number; attributedTo?: string }[];
+    harvestConfigs?: { entryId: string; accountId: string; fields: HarvestField[] }[];
     policyLinks?: PolicyLink[];
     consentBannerSeen?: boolean;
     consentDecided?: boolean;
@@ -191,6 +241,17 @@ export function recordPageReport(
       };
       if (incoming.attributedTo) signal.attributedTo = incoming.attributedTo as Site;
       visit.signals.push(signal);
+    }
+  }
+
+  for (const incoming of report.harvestConfigs ?? []) {
+    const existing = visit.harvestConfigs.find(
+      (c) => c.entryId === incoming.entryId && c.accountId === incoming.accountId
+    );
+    // A pixel can be reconfigured mid-visit; the current configuration wins.
+    if (existing) existing.fields = incoming.fields;
+    else if (visit.harvestConfigs.length < MAX_HARVEST_CONFIGS) {
+      visit.harvestConfigs.push({ ...incoming, firstSeenAt: Date.now() });
     }
   }
   touch(visit);

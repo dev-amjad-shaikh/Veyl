@@ -39,8 +39,35 @@ VisitEvidence {
 - **No request or response bodies.** Veyl never reads them; MV3 does not offer them to
   ordinary extensions and Veyl does not want them.
 - **No page content.** Nothing is read from the DOM except anchor hrefs for policy
-  links and the presence of a consent banner.
+  links and the presence of a consent banner. Veyl also learns that a form field
+  received focus, which is what makes "before you type" possible — an event, not a
+  value. It never reads what a field contains.
+- **No form values, in any form.** Not the text, not a hash of it, not a length. The
+  form-harvest evidence below is built from a tracker's own configuration and from the
+  *names* of request parameters.
 - **No history.** When the tab closes, the visit is deleted.
+
+## Form harvesting
+
+Two records, kept apart because they are two different strengths of claim.
+
+`HarvestConfig` is what a tracker **declares** it will take. The Meta Pixel keeps its
+`selectedMatchKeys` in the page so its own code can read it, so `probe.ts` reads it
+there: the field list, and the advertiser's account id so the claim can be checked. No
+network request, no new permission. When the configuration cannot be found the answer is
+`unknown` — never `none`.
+
+`HarvestTransmission` is what was **observed** leaving: a request URL carrying a
+parameter that names a field of personal information. `email_address` (X), `auto_email`
+(TikTok), `udff[em]` (Meta, configured through the dashboard), `ud[em]` (Meta, wired up
+by hand). Veyl records which parameter carried it and whether protection blocked the
+request. It does not record the value, and a value too short or too obviously empty to
+be real produces no finding at all.
+
+Silence has two causes and they are never merged: a tracker Veyl **blocked** never ran,
+so it read nothing; one that ran without publishing a configuration is genuinely
+**unknown**. A page showing seven rows that all said "unknown" would bury the one row
+that said something, so the unknowns collapse into a single line.
 
 ## Signals
 

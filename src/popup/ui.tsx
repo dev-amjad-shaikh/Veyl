@@ -132,22 +132,55 @@ export function StatementList({ statements }: { statements: Statement[] }) {
   );
 }
 
-export function Stat({
-  value,
+/**
+ * A small stroked glyph set, drawn on one 16-unit grid so the shapes sit at the
+ * same optical weight. They label a row; they never carry meaning on their own,
+ * so each one is hidden from assistive technology and the words do the work.
+ */
+const GLYPHS = {
+  cookie: 'M8 2.5a5.5 5.5 0 1 0 5.5 5.5 3 3 0 0 1-3-3 2.5 2.5 0 0 1-2.5-2.5ZM6 7h.01M9.5 9.5h.01M6.5 11h.01',
+  eye: 'M1.6 8S3.9 3.8 8 3.8 14.4 8 14.4 8 12.1 12.2 8 12.2 1.6 8 1.6 8Z M8 9.9A1.9 1.9 0 1 0 8 6.1a1.9 1.9 0 0 0 0 3.8Z',
+  company: 'M2.5 13.5V4.2l5-2.2v11.5M7.5 13.5h6V6.6l-6-2.4M4.6 6.6h.9M4.6 9h.9M9.9 8.4h1.3M9.9 10.7h1.3',
+  shield: 'M8 1.8 3 3.7v4.1c0 3 2.1 5.2 5 6.4 2.9-1.2 5-3.4 5-6.4V3.7L8 1.8Z',
+  form: 'M3 2.5h10v11H3zM5.4 5.8h5.2M5.4 8.2h5.2M5.4 10.6h2.8',
+  clock: 'M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12ZM8 4.8V8l2.2 1.4',
+} as const;
+
+export function Glyph({ name }: { name: keyof typeof GLYPHS }) {
+  return (
+    <svg class="glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d={GLYPHS[name]} fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  );
+}
+
+/**
+ * One fact, as a labelled row: what it is on the left, what it says on the
+ * right. Reading down the left column tells you what Veyl looked at; reading
+ * down the right tells you what it found.
+ */
+export function Fact({
+  icon,
   label,
+  children,
   tone,
 }: {
-  value: ComponentChildren;
+  icon: keyof typeof GLYPHS;
   label: string;
+  children: ComponentChildren;
   tone?: 'flag' | 'good';
 }) {
   return (
-    <div class={`stat${tone ? ` stat--${tone}` : ''}`}>
-      <div class="stat__value">{value}</div>
-      <div class="stat__label">{label}</div>
+    <div class="fact">
+      <span class="fact__label">
+        <Glyph name={icon} />
+        {label}
+      </span>
+      <span class={`fact__value${tone ? ` fact__value--${tone}` : ''}`}>{children}</span>
     </div>
   );
 }
+
 
 export function Empty({ title, children }: { title: string; children: ComponentChildren }) {
   return (

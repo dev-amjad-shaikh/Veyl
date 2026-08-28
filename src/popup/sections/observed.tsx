@@ -5,7 +5,7 @@
  */
 import type { CookieView, PrivacyExposure, ServiceView } from '../../domain/types';
 import { DIMENSION_LABELS } from '../../analysis/labels';
-import { ConfidencePill, Disclosure, LevelPill, ProvenanceTag, Section, Segments, Stat, StatementList } from '../ui';
+import { ConfidencePill, Disclosure, Fact, LevelPill, ProvenanceTag, Section, Segments, StatementList } from '../ui';
 
 export function ExposurePanel({ exposure }: { exposure: PrivacyExposure }) {
   return (
@@ -42,23 +42,30 @@ export function RightNow({ exposure }: { exposure: PrivacyExposure }) {
   const { rightNow } = exposure;
   return (
     <Section title="Right now">
-      <div class="stats">
-        <Stat value={rightNow.cookies} label={`cookies (${rightNow.thirdPartyCookies} third-party)`} />
-        <Stat
-          value={rightNow.trackingServices}
-          label="tracking services"
-          tone={rightNow.trackingServices === 0 ? 'good' : undefined}
-        />
-        <Stat value={rightNow.companies} label="companies contacted" />
-        {rightNow.blocked > 0 ? (
-          <Stat value={rightNow.blocked} label="requests blocked by Veyl" tone="good" />
-        ) : (
-          <Stat
-            value={rightNow.advertisingDetected ? 'Yes' : 'None seen'}
-            label="advertising tracking"
-            tone={rightNow.advertisingDetected ? 'flag' : 'good'}
-          />
-        )}
+      <div class="facts">
+        <Fact icon="eye" label="Tracking services" tone={rightNow.trackingServices === 0 ? 'good' : undefined}>
+          {rightNow.trackingServices === 0 ? 'None seen' : rightNow.trackingServices}
+        </Fact>
+        <Fact icon="company" label="Companies contacted">
+          {rightNow.companies}
+        </Fact>
+        <Fact icon="cookie" label="Cookies">
+          {rightNow.cookies}
+          {rightNow.thirdPartyCookies > 0 && (
+            <span class="fact__aside">{rightNow.thirdPartyCookies} third-party</span>
+          )}
+        </Fact>
+        <Fact
+          icon="shield"
+          label={rightNow.blocked > 0 ? 'Blocked by Veyl' : 'Advertising tracking'}
+          tone={rightNow.blocked > 0 || !rightNow.advertisingDetected ? 'good' : 'flag'}
+        >
+          {rightNow.blocked > 0
+            ? `${rightNow.blocked} request${rightNow.blocked === 1 ? '' : 's'}`
+            : rightNow.advertisingDetected
+              ? 'Yes'
+              : 'None seen'}
+        </Fact>
       </div>
       {rightNow.sessionReplayDetected && (
         <p class="callout callout--warn">

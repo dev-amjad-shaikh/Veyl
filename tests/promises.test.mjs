@@ -173,7 +173,7 @@ test('the weak fingerprint signals cannot on their own imply fingerprinting', ()
       'shop.example',
       buildInventory({
         visitId: 'v', tabId: 1, site: 'shop.example', url: 'https://shop.example/', startedAt: 0, updatedAt: 0,
-        consent: { bannerSeen: false, decidedAt: null }, domains: {}, cookies: [], storage: [], policyLinks: [],
+        consent: { bannerSeen: false, decidedAt: null }, domains: {}, cookies: [], storage: [], harvestConfigs: [], harvestTransmissions: [], policyLinks: [],
         signals: kinds.map((kind) => ({ kind, calls: 3, firstSeenAt: 0 })),
       }),
       null,

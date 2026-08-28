@@ -77,8 +77,21 @@ harder argument to make to anyone auditing this.
 | `settings` | Protection level, per-site overrides, feature toggles | Until you change it |
 | `history` | Monthly counters, if you opted in | Current month; erasable in one click |
 
-`chrome.storage.session` holds per-visit evidence: Chrome keeps it in memory and
-discards it when the browser closes. It is never written to disk.
+`chrome.storage.session` holds per-visit evidence, and the list of sites where someone
+dismissed the on-page notice. Chrome keeps it in memory and discards it when the browser
+closes. It is never written to disk.
+
+## What crosses into the page
+
+Veyl draws two things on a page: a hairline carrying the exposure level, and a card for
+a finding worth interrupting for. Rendering them means handing something to a content
+script, which runs in the page's process — so the boundary is drawn tightly.
+
+What crosses: the exposure level, tracker names, and field labels such as "email" or
+"postcode". What does not: the URL, any cookie, any storage key, any policy text, and
+any value a request carried. The notice can say *that* an email address was sent and
+*which parameter* carried it. It has never been told what the address was, because Veyl
+never read it.
 
 ## What privacy history does *not* contain
 

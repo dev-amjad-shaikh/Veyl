@@ -214,6 +214,64 @@ export interface ApiSignal {
   firstSeenAt: number;
 }
 
+// ---------------------------------------------------------------------------
+// Form harvesting — what a tracker is set up to take from what you type
+// ---------------------------------------------------------------------------
+
+/**
+ * A field of personal information an advertising tracker can be set up to lift
+ * out of a form. These are the eleven the Meta Pixel supports; other trackers
+ * name a subset of the same things.
+ */
+export type HarvestField =
+  | 'email'
+  | 'phone'
+  | 'first-name'
+  | 'last-name'
+  | 'city'
+  | 'state'
+  | 'postcode'
+  | 'gender'
+  | 'date-of-birth'
+  | 'country'
+  | 'site-id';
+
+/**
+ * A tracker's own statement of which fields it will take, read from the
+ * configuration the tracker loaded into this page.
+ *
+ * This is `declared` provenance — but declared by the tracker, not by the site.
+ * It is a machine configuration rather than a sentence in a policy, and it is
+ * readable before the person has typed a single character.
+ */
+export interface HarvestConfig {
+  /** Knowledge-graph id of the tracker, e.g. `meta-pixel`. */
+  entryId: string;
+  /** The advertiser's account id, so the claim can be checked against the page. */
+  accountId: string;
+  fields: HarvestField[];
+  firstSeenAt: number;
+}
+
+/**
+ * A request seen leaving the page carrying a parameter that names a field of
+ * personal information.
+ *
+ * Veyl reads the parameter's *name* and never its value. `email_address=…` is
+ * evidence that an email address was sent; what the address was is none of
+ * Veyl's business, and knowing it would not make the finding any truer.
+ */
+export interface HarvestTransmission {
+  domain: Site;
+  /** Knowledge-graph id of the receiving service, when the domain is recognised. */
+  entryId?: string;
+  field: HarvestField;
+  /** The parameter that named it — the evidence a person can check. */
+  parameter: string;
+  blocked: boolean;
+  firstSeenAt: number;
+}
+
 /** Everything Veyl observed for one page visit. Lives only in memory + session storage. */
 export interface VisitEvidence {
   visitId: string;
@@ -229,6 +287,9 @@ export interface VisitEvidence {
   cookies: CookieObservation[];
   storage: StorageObservation[];
   signals: ApiSignal[];
+  /** What trackers here declare they will take from forms, and what was seen leaving. */
+  harvestConfigs: HarvestConfig[];
+  harvestTransmissions: HarvestTransmission[];
   /** Candidate privacy/cookie policy URLs found on the page. */
   policyLinks: PolicyLink[];
 }
@@ -463,6 +524,41 @@ export type ReportStatus =
   /** Nothing Veyl can analyse (a new tab, a chrome:// page, a local file). */
   | 'unsupported';
 
+/**
+ * One tracker's form-harvesting position, as a person reads it.
+ *
+ * `declared` and `observed` are kept apart on purpose. A tracker can declare
+ * fields it never takes, and can take one it never declared; collapsing the two
+ * would let the interface assert something the evidence does not support.
+ */
+export interface HarvestView {
+  entryId: string;
+  name: string;
+  company: string | null;
+  /** The advertiser's account id, when the configuration named one. */
+  accountId: string | null;
+  declared: { field: HarvestField; label: string }[];
+  observed: { field: HarvestField; label: string; parameter: string; blocked: boolean }[];
+}
+
+/**
+ * The page's form-harvesting position in full.
+ *
+ * Only trackers with something specific to say get a row. The other two lists
+ * exist so that silence is accounted for rather than mistaken for safety: a
+ * tracker Veyl blocked never got the chance to read anything, and one that
+ * loaded but publishes no configuration is genuinely unknown. Neither is
+ * "none", and a page full of rows all saying "unknown" would bury the one row
+ * that matters.
+ */
+export interface HarvestSummary {
+  trackers: HarvestView[];
+  /** Harvest-capable trackers Veyl blocked before they could load. */
+  blocked: string[];
+  /** Harvest-capable trackers that loaded but keep their configuration to themselves. */
+  opaque: string[];
+}
+
 export interface SiteReport {
   status: ReportStatus;
   site: Site;
@@ -474,6 +570,8 @@ export interface SiteReport {
   cookies: CookieView;
   storage: StorageObservation[];
   signals: { kind: ApiSignalKind; label: string; calls: number; attributedTo?: string }[];
+  /** What the trackers here are set up to read from what you type. */
+  harvest: HarvestSummary;
   policy: PolicyAnalysis | null;
   policyPending: boolean;
   consistency: ConsistencyFinding[];

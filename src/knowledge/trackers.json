@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-22",
+  "version": "2026-08-27",
   "note": "Hand-curated by the Veyl project from public vendor documentation. Facts only: who owns a domain, what the service is for, what it can observe. No third-party list is redistributed here.",
   "trackers": [
     {
@@ -328,7 +328,8 @@
         "tiktok.com",
         "tiktokcdn.com",
         "analytics.tiktok.com",
-        "byteoversea.com"
+        "byteoversea.com",
+        "tiktokw.us"
       ],
       "name": "TikTok Pixel",
       "org": "bytedance",

@@ -86,6 +86,35 @@ export function buildDigest(report: SiteReport): string {
     }
   }
 
+  // The field names only. Not the account id, which identifies the advertiser
+  // rather than the person, and which the model has no use for.
+  const { trackers, blocked, opaque } = report.harvest;
+  if (trackers.length > 0 || blocked.length > 0 || opaque.length > 0) {
+    section('What trackers here are set up to read from forms');
+    for (const view of trackers) {
+      if (view.declared.length > 0) {
+        lines.push(
+          `- [declared] ${view.name} is configured to collect: ${view.declared.map((field) => field.label).join(', ')}. Read from the tracker's own configuration on this page, not from the site's policy.`
+        );
+      }
+      for (const seen of view.observed) {
+        lines.push(
+          `- [observed] ${view.name} ${seen.blocked ? 'tried to send' : 'sent'} a ${seen.label}${seen.blocked ? ', and Veyl blocked the request' : ''}. Veyl saw the name of the parameter, never its value.`
+        );
+      }
+    }
+    if (blocked.length > 0) {
+      lines.push(
+        `- [observed] Veyl blocked ${blocked.join(', ')} before ${blocked.length === 1 ? 'it' : 'they'} could load, so ${blocked.length === 1 ? 'it' : 'they'} read nothing here.`
+      );
+    }
+    if (opaque.length > 0) {
+      lines.push(
+        `- [unknown] ${opaque.join(', ')} can be set up to take what is typed into a form, but ${opaque.length === 1 ? 'does' : 'do'} not publish that setting. Nothing was seen leaving this page.`
+      );
+    }
+  }
+
   section('What they may know');
   for (const item of exposure.mayKnow) {
     lines.push(`- [${item.provenance}] ${item.label} — ${item.because}.`);

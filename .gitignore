@@ -13,7 +13,10 @@ tests/.build/
 dist-e2e/
 veyl-*.zip
 
-# Submission prep and test output — kept locally, not part of the project
+# Submission prep, test output, and the measurement work behind product
+# decisions. Kept locally; none of it is part of the product or its docs.
 store/
 evidence/
 study/
+mockups/
+research/

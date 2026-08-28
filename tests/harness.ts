@@ -12,3 +12,5 @@ export { asPlainText } from '../src/popup/AskPanel';
 export { siteOf } from '../src/domain/site';
 export { DEFAULT_SETTINGS } from '../src/domain/settings';
 export { FUNCTIONAL_CATEGORIES } from '../src/domain/types';
+export { fieldsInUrl, HARVESTERS } from '../src/knowledge/harvest';
+export { badgeFor } from '../src/background/badge';

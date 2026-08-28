@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Veyl \u2014 Privacy Agent for the Web",
-  "version": "1.0.0",
+  "version": "1.1.3",
   "description": "Veyl shows you what a website is actually doing with your data, in plain language, without ever sending your browsing anywhere.",
   "minimum_chrome_version": "121",
   "icons": {
@@ -10,7 +10,6 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup/index.html",
     "default_title": "Veyl",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -23,12 +22,13 @@
     "type": "module"
   },
   "permissions": [
-    "storage",
-    "scripting",
     "activeTab",
     "cookies",
-    "webRequest",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "scripting",
+    "sidePanel",
+    "storage",
+    "webRequest"
   ],
   "host_permissions": [],
   "optional_host_permissions": [
@@ -38,5 +38,8 @@
   "options_ui": {
     "page": "options/index.html",
     "open_in_tab": true
+  },
+  "side_panel": {
+    "default_path": "popup/index.html"
   }
 }

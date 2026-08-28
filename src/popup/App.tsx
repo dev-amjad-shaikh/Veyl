@@ -8,6 +8,7 @@ import { AskPanel } from './AskPanel';
 import { Cookies, ExposurePanel, MayKnow, Recipients, RightNow, Unknowns } from './sections/observed';
 import { Consistency, PolicyPanel } from './sections/declared';
 import { Protection } from './sections/protection';
+import { HarvestPanel } from './sections/harvest';
 
 type State =
   | { kind: 'loading' }
@@ -25,6 +26,13 @@ const pinnedTab = (() => {
   return Number.isInteger(value) && value > 0 ? value : null;
 })();
 
+/**
+ * The same page is rendered in two very different shapes: a side panel the
+ * person can drag to any width, and a tab that fills a whole window. Saying
+ * which lets the stylesheet lay itself out for the room it actually has.
+ */
+document.body.dataset.surface = pinnedTab === null ? 'panel' : 'tab';
+
 export function App() {
   const [state, setState] = useState<State>({ kind: 'loading' });
 
@@ -35,6 +43,25 @@ export function App() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  /**
+   * As a side panel this stays open while you browse, so it has to follow you:
+   * a new tab, or a new page in the same tab, is a different report. Pinned to
+   * a tab in the address bar it deliberately does not move.
+   */
+  useEffect(() => {
+    if (pinnedTab !== null) return;
+    const reload = () => void load();
+    const onUpdated = (_id: number, change: { status?: string }, tab: chrome.tabs.Tab) => {
+      if (tab.active && change.status === 'loading') reload();
+    };
+    chrome.tabs.onActivated.addListener(reload);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      chrome.tabs.onActivated.removeListener(reload);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+    };
   }, [load]);
 
   // The policy is fetched in the background. Wait for it, then stop — a report
@@ -77,6 +104,7 @@ export function App() {
       </header>
 
       <RightNow exposure={report.exposure} />
+      <HarvestPanel summary={report.harvest} />
       <ExposurePanel exposure={report.exposure} />
       <AskPanel report={report} />
       <MayKnow exposure={report.exposure} />

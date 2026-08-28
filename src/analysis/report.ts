@@ -1,17 +1,20 @@
 /** Composes evidence, knowledge and judgement into the single object the interface renders. */
 import type {
   CookieView,
+  HarvestSummary,
+  HarvestView,
   PolicyAnalysis,
   ServiceView,
   SiteReport,
   VisitEvidence,
 } from '../domain/types';
 import type { ProtectionLevel } from '../domain/settings';
-import { KNOWLEDGE_VERSION, identifyCookie } from '../knowledge/graph';
+import { KNOWLEDGE_VERSION, entryById, identifyCookie, organizationById } from '../knowledge/graph';
+import { HARVESTERS } from '../knowledge/harvest';
 import { buildInventory, type Inventory, type ServiceSighting } from './inventory';
 import { compare } from './consistency';
 import { assessExposure, SIGNAL_LABELS } from './exposure';
-import { CATEGORY_LABELS, DATA_TYPE_LABELS } from './labels';
+import { CATEGORY_LABELS, DATA_TYPE_LABELS, HARVEST_FIELD_LABELS } from './labels';
 
 function toServiceView(sighting: ServiceSighting): ServiceView {
   const entry = sighting.entry;
@@ -49,6 +52,77 @@ function toServiceView(sighting: ServiceSighting): ServiceView {
     confidence: entry?.confidence ?? null,
     observed,
     unknowns,
+  };
+}
+
+/**
+ * What the trackers on this page are set up to read from what a person types.
+ *
+ * Declared and observed are kept apart deliberately. A pixel can declare fields
+ * it never takes, and can take one it never declared, so the two are reported
+ * side by side rather than merged into a single confident claim. A tracker that
+ * harvests forms but keeps the setting to itself gets a row saying exactly
+ * that — "unknown" is the finding, not a gap to be filled in.
+ */
+function buildHarvest(visit: VisitEvidence, inventory: Inventory): HarvestSummary {
+  const views = new Map<string, HarvestView>();
+
+  const viewFor = (entryId: string): HarvestView | null => {
+    const existing = views.get(entryId);
+    if (existing) return existing;
+    const sighting = inventory.services.find((service) => service.entry?.id === entryId);
+    const entry = sighting?.entry ?? entryById(entryId);
+    if (!entry) return null;
+    const view: HarvestView = {
+      entryId,
+      name: entry.name,
+      company: sighting?.organization?.name ?? organizationById(entry.org)?.name ?? null,
+      accountId: null,
+      declared: [],
+      observed: [],
+    };
+    views.set(entryId, view);
+    return view;
+  };
+
+  for (const config of visit.harvestConfigs ?? []) {
+    const view = viewFor(config.entryId);
+    if (!view) continue;
+    view.accountId = config.accountId;
+    view.declared = config.fields.map((field) => ({ field, label: HARVEST_FIELD_LABELS[field] }));
+  }
+
+  for (const transmission of visit.harvestTransmissions ?? []) {
+    const view = transmission.entryId ? viewFor(transmission.entryId) : null;
+    if (!view) continue;
+    view.observed.push({
+      field: transmission.field,
+      label: HARVEST_FIELD_LABELS[transmission.field],
+      parameter: transmission.parameter,
+      blocked: transmission.blocked,
+    });
+  }
+
+  // Silence has two very different causes, and they must not be merged. A
+  // tracker Veyl blocked never ran, so it read nothing — that is protection
+  // working. A tracker that ran but publishes nothing is simply unknown.
+  const blocked: string[] = [];
+  const opaque: string[] = [];
+  for (const service of inventory.services) {
+    const entryId = service.entry?.id;
+    if (!entryId || !(entryId in HARVESTERS) || views.has(entryId)) continue;
+    (service.blocked > 0 && service.requests === service.blocked ? blocked : opaque).push(service.name);
+  }
+
+  return {
+    trackers: [...views.values()].sort(
+      (a, b) =>
+        b.observed.length - a.observed.length ||
+        b.declared.length - a.declared.length ||
+        a.name.localeCompare(b.name)
+    ),
+    blocked: blocked.sort(),
+    opaque: opaque.sort(),
   };
 }
 
@@ -117,6 +191,7 @@ export function buildReport(
     services: inventory.services.map(toServiceView),
     cookies: toCookieView(inventory),
     storage: visit.storage,
+    harvest: buildHarvest(visit, inventory),
     signals: visit.signals.map((s) => ({
       kind: s.kind,
       label: SIGNAL_LABELS[s.kind] ?? s.kind,

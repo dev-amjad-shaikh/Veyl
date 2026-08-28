@@ -34,8 +34,9 @@ judgement code has no license to invent.
  │                          │
  │            ┌─────────────┴─────────────┐
  │            ▼                           ▼
- │      popup / settings           protection engine
- │      (explanation)              (declarativeNetRequest)
+ │   side panel / settings /       protection engine
+ │   on-page notice                (declarativeNetRequest)
+ │      (explanation)
  └───────────────────────────────────────┘
 ```
 
@@ -76,6 +77,46 @@ guarantees Veyl is awake at all: a message reliably starts a suspended MV3 servi
 worker, whereas a network event may not, and without it the first page after a browser
 restart would go unwatched.
 
+## What a tracker is set up to read from a form
+
+An advertising pixel that harvests form fields has to be told which fields to take, and
+it keeps that instruction in the page so its own code can read it. `src/content/probe.ts`
+reads it there — from the tracker's own configuration, in the page's world, with no
+network request of its own and no new permission.
+
+That produces a claim Veyl could not otherwise make: what a page is set up to collect,
+stated *before* anyone types anything. It is `declared` provenance, but declared by the
+tracker rather than by the site — a machine configuration, not a sentence in a policy.
+
+The other half is observational. Trackers label their own payloads: X sends
+`email_address`, TikTok sends `auto_email`, Meta sends `udff[em]`.
+`src/knowledge/harvest.ts` reads those **names** off request URLs and never their
+values. Knowing what the address was would not make the finding any truer.
+
+The two are reported side by side and never merged — a pixel can declare a field it
+never takes, and take one it never declared. Silence is split as carefully: a tracker
+Veyl blocked never ran, which is protection working; one that ran without publishing a
+configuration is genuinely unknown. See [`evidence-schema.md`](evidence-schema.md).
+
+## What Veyl draws on the page
+
+Two surfaces, and no more, both in `src/content/notice.ts`:
+
+- a **hairline** along the top carrying the exposure level, and
+- a **card**, for exactly two findings — a tracker here is set up to take what you type,
+  or something personal was seen leaving.
+
+They live in a *closed* shadow root, so a page cannot restyle the notice into something
+it is not or rewrite what it says. Neither surface moves the page's own layout, and the
+card measures anything pinned to the bottom of the viewport and sits above it: covering
+a site's cookie banner would hide the very consent choice Veyl is describing.
+
+Only tracker names and field labels cross into the page's process — never a URL, a
+value or a cookie. Dismissing the card mutes the site for the rest of the browser
+session, which is held in `chrome.storage.session` and dies with the browser.
+
+Everything else belongs in the panel, where you went looking for it.
+
 ## Progressive permission
 
 The manifest declares **no host permissions**. Because nothing is declared, the page
@@ -84,6 +125,10 @@ always match exactly the origins you have granted. The set of sites Veyl can see
 set you approved, enforced by Chrome.
 
 `src/background/permissions.ts` owns that, and re-syncs on every permission change.
+
+The non-host permissions are deliberately dull: `storage`, `scripting`, `activeTab`,
+`cookies`, `webRequest`, `declarativeNetRequest`, and `sidePanel`. None of them prompts,
+and none grants access to a page on its own.
 
 ## Protection
 
@@ -117,6 +162,6 @@ built-in on-device model. Three things keep it inside the rule at the top of thi
 3. Its output is display-only. Nothing downstream reads it, stores it or acts on it.
 
 Chrome's Prompt API is a document API — it does not exist in a service worker — so this
-lives in the popup, which also means the model is only ever running while the panel is
-open. `src/popup/language-model.ts` wraps it; where the API or the model is missing,
+lives in the side panel, which also means the model is only ever running while the
+panel is open. `src/model/language-model.ts` wraps it; where the API or the model is missing,
 the panel does not render.

@@ -1,6 +1,6 @@
 {
   "name": "veyl",
-  "version": "1.0.0",
+  "version": "1.1.3",
   "private": true,
   "description": "Veyl \u2014 no more unwanted tracking. A real-time privacy interpreter for the web.",
   "type": "module",

@@ -44,7 +44,9 @@ in [the privacy policy](../PRIVACY.md) and in the source.
 
 ## Reading the report
 
-Click the icon again and the report appears.
+Click the icon again and the report opens as a **side panel** beside the page. It stays
+there while you browse and re-reads each page you visit, so you can leave it open rather
+than fetching it a click at a time. Close it with the × in its corner.
 
 ![The top of a Veyl report](images/report-top.png)
 
@@ -54,6 +56,26 @@ counts for what just happened on this page.
 
 The icon in your toolbar carries the same thing at a glance: a coloured badge with the
 number of tracking services, or the number of requests blocked when protection is on.
+
+### What this page can read from you
+
+![What a page is set up to read from you](images/harvest.png)
+
+Advertising pixels can be configured to lift your email address, name, phone number,
+postcode and date of birth out of any form on the page. Veyl reads that setting — from
+the tracker's own configuration, not from the site's policy — so it can tell you before
+you type anything.
+
+Three different things can be said here, and Veyl keeps them apart:
+
+- **Declared** — the tracker publishes which fields it will take, and they are listed.
+- **Observed** — a request left the page carrying a parameter that *names* personal
+  data, such as `udff[em]`. Veyl reads the name of the parameter and never its value.
+- **Unknown** — the tracker can be set up this way but does not publish the setting.
+  Not the same as "it doesn't". Veyl will not guess.
+
+A tracker Veyl **blocked** is reported as blocked, not as unknown: it never loaded, so
+it read nothing.
 
 ### Exposure, dimension by dimension
 
@@ -193,8 +215,27 @@ works exactly the same. Veyl's settings page reports the status.
 
 ---
 
-> **The popup feels cramped?** *Open in a tab* at the bottom of the report opens the
-> same thing full width, still about the page you were on.
+> **Want it full width?** *Open in a tab* at the bottom of the report opens the same
+> thing in a tab of its own. Unlike the panel it stays pinned to the page you were on,
+> so it will not change under you while you read it.
+
+## What Veyl draws on the page
+
+The toolbar icon always carries the exposure level. Because an icon in a corner is not
+something anyone notices while reading, Veyl can also mark the page itself — sparingly.
+
+- A **note in the corner** when the page is high exposure, saying what made it high —
+  fingerprinting, cross-site activity, how long the data is kept — and the counts behind
+  it. It also appears for two specific findings: a tracker here is set up to read what
+  you type, or something personal was seen leaving the page.
+- A **hairline** along the top of the page, coloured by exposure level. Three pixels, no
+  text, and it never moves the page around. It is what remains after you close the note.
+
+Close the note with the × or the Escape key and it stays closed on that page. The
+hairline stays behind as the quiet version of the same fact.
+
+**Not on this site** silences both for that site until you close your browser. You can
+change what fires, or turn it off entirely, under **On the page** in Settings.
 
 ## Settings
 
@@ -203,6 +244,10 @@ works exactly the same. Veyl's settings page reports the status.
 - **Where Veyl can look** — per-site access, or all sites.
 - **Protection** — your default level, Global Privacy Control, and whether Veyl reads
   published privacy policies.
+- **On the page** — what, if anything, Veyl draws on the page you are reading: never,
+  only when something personal leaves, high exposure (the default), or medium and above.
+  Separately, whether to warn you before you type into a form that a tracker here is
+  configured to read.
 - **Privacy history** — off unless you turn it on. Counters only, for the current month:
   no list of sites, no domains, no hashes of domains, no timestamps. Erase it in one
   click.

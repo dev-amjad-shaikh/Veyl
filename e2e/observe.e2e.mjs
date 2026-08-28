@@ -76,6 +76,22 @@ test('Veyl explains a real tracking-heavy page end to end', async (t) => {
   assert.ok(local.identifierKeys.includes('_hjSessionUser_9921'));
   assert.ok(!local.identifierKeys.includes('theme'), 'a preference is not an identifier');
 
+  // --- what the page can read from you ------------------------------------
+  // The pixel named an email address and a postcode in its own parameters.
+  // Veyl must report which parameter carried each, and never the value.
+  const meta = report.harvest.trackers.find((t) => t.entryId === 'meta-pixel');
+  assert.ok(meta, 'the Meta Pixel announced personal data in its parameters and must be reported');
+  assert.deepEqual(
+    meta.observed.map((o) => o.field).sort(),
+    ['email', 'postcode'],
+    `expected email and postcode, saw ${meta.observed.map((o) => o.field).join(', ')}`
+  );
+  assert.deepEqual(meta.observed.map((o) => o.parameter).sort(), ['udff[em]', 'udff[zp]']);
+  assert.ok(
+    !JSON.stringify(report.harvest).includes('1f0c3a5b7d9e2468'),
+    'the value a parameter carried must never reach the report'
+  );
+
   // --- fingerprinting -----------------------------------------------------
   const canvas = report.signals.find((s) => s.kind === 'canvas-readback');
   assert.ok(canvas, 'canvas readback after drawing text is the classic fingerprint, and must be seen');

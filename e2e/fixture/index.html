@@ -60,6 +60,13 @@
       load('https://js.stripe.com/v3/');
       load('https://static.criteo.net/js/ld/ld.js');
       new Image().src = 'https://www.facebook.com/tr?id=1234567890&ev=PageView';
+      // Automatic advanced matching: the pixel announces, in its own parameter
+      // names, that it is carrying an email address and a postcode. The values
+      // here are arbitrary hex — Veyl must report the parameter, never the value.
+      new Image().src =
+        'https://www.facebook.com/tr?id=1234567890&ev=Lead' +
+        '&udff%5Bem%5D=1f0c3a5b7d9e2468ac13579bdf02468ace13579bdf02468ace13579bdf02468a' +
+        '&udff%5Bzp%5D=2a1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809';
       new Image().src = 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST';
 
       document.getElementById('accept').addEventListener('click', () => {

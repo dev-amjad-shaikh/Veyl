@@ -30,6 +30,8 @@ function visit(overrides = {}) {
     cookies: [],
     storage: [],
     signals: [],
+    harvestConfigs: [],
+    harvestTransmissions: [],
     policyLinks: [],
     ...overrides,
   };

@@ -10,8 +10,8 @@
  * the site itself. Veyl has no server.
  */
 import type { PolicyAnalysis, Site, SiteReport, UnavailableReport } from '../domain/types';
-import type { Message } from '../domain/messages';
-import { DEFAULT_SETTINGS, effectiveProtection, type Settings } from '../domain/settings';
+import type { Message, PageCuePayload, TabMessage } from '../domain/messages';
+import { ALL_SITE_PATTERNS, DEFAULT_SETTINGS, effectiveProtection, type Settings } from '../domain/settings';
 import { siteOf } from '../domain/site';
 import { buildReport } from '../analysis/report';
 import { fetchPolicy, guessPolicyUrls } from '../analysis/policy';
@@ -19,6 +19,7 @@ import { collectCookies } from './cookies';
 import { applyProtection } from './protection';
 import { clearHistory, readTotals, recordVisit } from './history';
 import { KNOWLEDGE_VERSION, TRACKER_COUNT } from '../knowledge/graph';
+import { DIMENSION_LABELS } from '../analysis/labels';
 import { hasAccessTo, originPatternFor, syncPageScripts } from './permissions';
 import { loadSettings, saveSettings } from './store';
 import * as badge from './badge';
@@ -29,6 +30,14 @@ const ready = (async () => {
   settings = await loadSettings();
   await applyProtection(settings);
   await syncPageScripts();
+  // Deliberately NOT openPanelOnActionClick. That setting makes Chrome open the
+  // panel *instead of* delivering the action click — and the action click is
+  // what grants `activeTab`. Without it Veyl cannot read the address of the tab
+  // it is being asked about, so it cannot even name the site to ask permission
+  // for. The panel is opened from the click handler below instead.
+  await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {
+    /* older Chrome; the report is still reachable in a tab */
+  });
 })();
 
 /** Policy analyses live in session memory only — nothing about what you read is written to disk. */
@@ -46,7 +55,13 @@ chrome.webRequest.onBeforeRequest.addListener(
       scheduleBadge(details.tabId);
       return undefined;
     }
-    visits.recordRequest(details.tabId, details.url, details.type, details.timeStamp);
+    // A page reveals itself over several seconds, not at the first request. Any
+    // request that changes the picture — a company not seen before, or personal
+    // data being announced — schedules a fresh look, and the debounce below
+    // collapses a burst of them into one.
+    if (visits.recordRequest(details.tabId, details.url, details.type, details.timeStamp)) {
+      scheduleBadge(details.tabId);
+    }
     return undefined;
   },
   { urls: ['http://*/*', 'https://*/*'] }
@@ -63,22 +78,62 @@ chrome.webRequest.onErrorOccurred.addListener(
 );
 
 chrome.tabs.onRemoved.addListener((tabId) => {
+  clearTimeout(badgeTimers.get(tabId));
+  badgeTimers.delete(tabId);
+  badgeDeadlines.delete(tabId);
   void finalize(tabId).finally(() => visits.endVisit(tabId));
+});
+
+/**
+ * Clicking the toolbar icon opens the panel — and, just as importantly, is what
+ * grants `activeTab` for the current page. That grant is how Veyl learns which
+ * site it is being asked about before you have given it access to anything.
+ *
+ * `sidePanel.open` has to be called before any `await`, or Chrome stops
+ * counting this as a user gesture and refuses.
+ */
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id === undefined) return;
+  void chrome.sidePanel.open({ tabId: tab.id }).catch(() => {
+    /* older Chrome without the side panel: nothing else to open */
+  });
+  scheduleBadge(tab.id);
 });
 
 chrome.tabs.onActivated.addListener(({ tabId }) => scheduleBadge(tabId));
 
+// Late trackers are the norm, so look again once the page says it has finished.
+// This also gives a restarted service worker an event to repaint on: its timers
+// did not survive being suspended, but this one wakes it.
+chrome.tabs.onUpdated.addListener((tabId, change) => {
+  if (change.status === 'complete') scheduleBadge(tabId);
+});
+
 // Cookies land after the requests that set them, so let the page settle first.
+// But a page that keeps contacting new companies would keep pushing that settle
+// back for as long as it kept going, and an indicator that arrives eventually is
+// not an indicator. So the wait is debounced with a ceiling: quiet pages paint
+// once, busy pages repaint at a steady beat while they are still busy.
+const SETTLE_MS = 900;
+const MAX_WAIT_MS = 2200;
+
 const badgeTimers = new Map<number, ReturnType<typeof setTimeout>>();
+const badgeDeadlines = new Map<number, number>();
 
 function scheduleBadge(tabId: number): void {
+  const now = Date.now();
+  const deadline = badgeDeadlines.get(tabId) ?? now + MAX_WAIT_MS;
+  badgeDeadlines.set(tabId, deadline);
+
   clearTimeout(badgeTimers.get(tabId));
+  const wait = Math.max(0, Math.min(SETTLE_MS, deadline - now));
   badgeTimers.set(
     tabId,
     setTimeout(() => {
       badgeTimers.delete(tabId);
+      badgeDeadlines.delete(tabId);
       void updateBadge(tabId);
-    }, 1200)
+    }, wait)
   );
 }
 
@@ -94,6 +149,57 @@ async function updateBadge(tabId: number): Promise<void> {
     report.exposure.rightNow.trackingServices,
     report.protection.blocked
   );
+  await sendPageCue(tabId, report);
+}
+
+/** Sites where someone dismissed the on-page notice. Cleared when Chrome closes. */
+const MUTED_KEY = 'mutedSites';
+
+async function mutedSites(): Promise<string[]> {
+  const stored = await chrome.storage.session.get(MUTED_KEY);
+  return (stored[MUTED_KEY] as string[] | undefined) ?? [];
+}
+
+/**
+ * Tells the page what, if anything, to draw. Field labels and tracker names
+ * cross this boundary and nothing else — no URL, no value, no cookie.
+ */
+async function sendPageCue(tabId: number, report: SiteReport): Promise<void> {
+  if (settings.pageCue === 'never' && !settings.formNotice) return;
+  if ((await mutedSites()).includes(report.site)) return;
+
+  const payload: PageCuePayload = {
+    level: report.exposure.overall,
+    cue: settings.pageCue,
+    formNotice: settings.formNotice,
+    headline: report.exposure.headline,
+    // Naming what drove the level is the difference between a warning and a
+    // finding. A page can be high with nothing blocked and no tracker in sight.
+    drivers: report.exposure.dimensions
+      .filter((dimension) => dimension.level === 'high')
+      .map((dimension) => DIMENSION_LABELS[dimension.dimension].toLowerCase()),
+    counts: {
+      trackers: report.exposure.rightNow.trackingServices,
+      companies: report.exposure.rightNow.companies,
+      cookies: report.exposure.rightNow.cookies,
+      blocked: report.protection.blocked,
+    },
+    declared: report.harvest.trackers
+      .filter((tracker) => tracker.declared.length > 0)
+      .map((tracker) => ({ name: tracker.name, fields: tracker.declared.map((f) => f.label) })),
+    sent: report.harvest.trackers
+      .filter((tracker) => tracker.observed.length > 0)
+      .map((tracker) => ({
+        name: tracker.name,
+        fields: [...new Set(tracker.observed.map((o) => o.label))],
+        blocked: tracker.observed.every((o) => o.blocked),
+      })),
+  };
+
+  const message: TabMessage = { type: 'page-cue', payload };
+  await chrome.tabs.sendMessage(tabId, message).catch(() => {
+    // No collector in this tab — an extension page, or access not granted.
+  });
 }
 
 // --- report assembly ------------------------------------------------------
@@ -104,12 +210,20 @@ async function unavailable(tabId: number): Promise<UnavailableReport> {
   const pattern = originPatternFor(url);
 
   if (!pattern) {
+    // An empty address is not an empty tab. It means Chrome has not told Veyl
+    // what this page is — which happens when the panel was opened some way
+    // other than clicking the Veyl icon, since that click is what grants
+    // `activeTab`. Saying "there is no website here" would be a lie, and would
+    // leave someone stuck with no way forward.
+    const unreadable = tab !== null && url === '';
     return {
       status: 'unsupported',
       url,
       site: null,
-      originPattern: null,
-      reason: 'There is no website open in this tab for Veyl to look at.',
+      originPattern: unreadable ? ALL_SITE_PATTERNS[0] ?? null : null,
+      reason: unreadable
+        ? 'Veyl cannot see which site this tab is on. Click the Veyl icon in the toolbar while the page is open, or let Veyl watch every site from Settings.'
+        : 'There is no website open in this tab for Veyl to look at.',
     };
   }
   const granted = await hasAccessTo(url);
@@ -198,7 +312,30 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
         const tabId = sender.tab?.id;
         if (tabId !== undefined) {
           visits.recordPageReport(tabId, message.payload);
+          if (message.payload.harvestConfigs?.length) scheduleBadge(tabId);
           if (message.payload.policyLinks?.length) void readPolicy(tabId);
+        }
+        sendResponse({ ok: true });
+        return;
+      }
+      case 'mute-site': {
+        const tabId = sender.tab?.id;
+        const visit = tabId === undefined ? null : visits.peek(tabId);
+        if (visit) {
+          const muted = await mutedSites();
+          if (!muted.includes(visit.site)) {
+            await chrome.storage.session.set({ [MUTED_KEY]: [...muted, visit.site] });
+          }
+        }
+        sendResponse({ ok: true });
+        return;
+      }
+      case 'open-panel': {
+        const tabId = sender.tab?.id;
+        if (tabId !== undefined) {
+          await chrome.sidePanel.open({ tabId }).catch(() => {
+            /* needs a user gesture Chrome can see; the toolbar icon always works */
+          });
         }
         sendResponse({ ok: true });
         return;
@@ -302,5 +439,16 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   await ready;
   if (details.reason === 'install') {
     await chrome.tabs.create({ url: chrome.runtime.getURL('options/index.html#welcome') });
+    return;
+  }
+  if (details.reason === 'update') {
+    // An update leaves every open tab with a content script Chrome has already
+    // disconnected, so the page keeps its old visit but Veyl has gone quiet on
+    // it. The toolbar can be brought back immediately; the on-page notice
+    // genuinely needs a reload, and saying so is better than looking broken.
+    const tabs = await chrome.tabs.query({}).catch(() => []);
+    for (const tab of tabs) {
+      if (tab.id !== undefined) scheduleBadge(tab.id);
+    }
   }
 });

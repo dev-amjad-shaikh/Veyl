@@ -130,7 +130,33 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-body.popup { width: 400px; }
+/*
+ * There is no popup any more: this page is a side panel or a tab. The panel is
+ * resizable, so nothing here fixes a width — the layout is told how much room
+ * it has and adapts, below.
+ */
+body.popup { min-width: 320px; }
+
+#root {
+  container-type: inline-size;
+  container-name: panel;
+}
+
+/*
+ * A whole window is far too wide to read across, so the tab keeps a measure —
+ * but only once there is a window wide enough to be worth centring in. Below
+ * that it is just a panel that happens to have its own tab.
+ */
+@media (min-width: 860px) {
+  body.popup[data-surface="tab"] { background: var(--sunken); }
+  body.popup[data-surface="tab"] #root {
+    max-width: 760px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    border-inline: 1px solid var(--line-soft);
+  }
+}
 
 h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
 ul { list-style: none; padding: 0; }
@@ -155,9 +181,15 @@ code {
   display: flex;
   gap: var(--s3);
   align-items: flex-start;
-  padding: var(--s5) var(--s4) var(--s4);
+  padding: var(--s7) var(--s5) var(--s6);
   background: linear-gradient(180deg, var(--level-wash) 0%, transparent 100%);
   border-bottom: 1px solid var(--line);
+  /* The panel stays open while you browse, so the site it is about follows you
+     down the page rather than scrolling away. */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(12px);
 }
 
 .header__mark {
@@ -176,31 +208,36 @@ code {
 .header__text { flex: 1; min-width: 0; }
 
 .header__site {
-  font-size: var(--fs-lead);
-  font-weight: 640;
-  letter-spacing: -0.015em;
+  font-size: var(--fs-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .header__label {
-  margin-top: 3px;
+  display: inline-block;
+  margin-top: var(--s3);
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
   font-size: var(--fs-micro);
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  background: var(--level-wash);
   color: var(--level);
 }
 
 .header__headline {
-  margin-top: var(--s2);
+  margin-top: var(--s3);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--text-2);
 }
 
-.section { padding: var(--s4); border-bottom: 1px solid var(--line-soft); }
+.section { padding: var(--s6) var(--s5); border-bottom: 1px solid var(--line-soft); }
 .section:last-of-type { border-bottom: 0; }
 
 .section__title {
@@ -212,7 +249,7 @@ code {
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-bottom: var(--s3);
+  margin-bottom: var(--s4);
 }
 .section__aside { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text-3); }
 
@@ -238,11 +275,11 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px 3px 7px;
+  padding: 4px 11px;
   border-radius: var(--r-pill);
   font-size: var(--fs-micro);
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font-weight: 650;
+  letter-spacing: 0.06em;
   background: var(--level-wash, var(--surface-2));
   color: var(--level, var(--text-2));
   white-space: nowrap;
@@ -281,8 +318,8 @@ code {
 
 .prov {
   display: inline-block;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 2px 6px;
+  border-radius: 5px;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -298,7 +335,7 @@ code {
 
 .tag {
   display: inline-block;
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: var(--r-pill);
   font-size: var(--fs-micro);
   font-weight: 650;
@@ -309,6 +346,131 @@ code {
 .tag--ad { background: var(--high-wash); color: var(--high); }
 .tag--functional { background: var(--none-wash); color: var(--none); }
 .tag--unknown { background: var(--surface-2); color: var(--text-3); }
+
+/* --- what a page can read from you ---------------------------------------- */
+
+.harvest { display: flex; flex-direction: column; gap: var(--s2); }
+
+.harvest__row {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--r);
+  padding: var(--s4);
+  background: var(--bg);
+}
+.harvest__row[data-tone="observed"] { border-left-color: var(--high); }
+.harvest__row[data-tone="blocked"]  { border-left-color: var(--none); }
+.harvest__row[data-tone="declared"] { border-left-color: var(--medium); }
+.harvest__row[data-tone="unknown"]  { border-left-color: var(--unknown); }
+
+.harvest__head { display: flex; align-items: center; gap: var(--s2); }
+.harvest__name { font-size: var(--fs-body); font-weight: 600; }
+.harvest__company { font-size: var(--fs-small); color: var(--text-3); }
+
+.harvest__tag {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  font-weight: 650;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.harvest__tag[data-tone="observed"] { background: var(--high-wash); color: var(--high); }
+.harvest__tag[data-tone="blocked"]  { background: var(--none-wash); color: var(--none); }
+.harvest__tag[data-tone="declared"] { background: var(--medium-wash); color: var(--medium); }
+
+.harvest__line {
+  margin: var(--s2) 0 0;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+/* The field names are the finding, so they are set apart rather than run in. */
+.harvest__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  margin: var(--s2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.harvest__field {
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  background: var(--high-wash);
+  color: var(--high);
+  border-radius: var(--r-sm);
+  padding: 2px 6px;
+}
+
+.harvest__quiet {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+  color: var(--text-3);
+}
+
+.harvest__note {
+  display: block;
+  margin-top: var(--s2);
+  font-size: var(--fs-small);
+  color: var(--text-3);
+}
+
+/* --- facts: what Veyl looked at, and what it found ------------------------ */
+
+/*
+ * Two columns and no rules. A hairline under every row is a fence where none is
+ * needed: the labels already line up, and the eye follows a column far better
+ * than it follows a stack of boxes. Space does the separating.
+ */
+.facts {
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr;
+  align-items: baseline;
+  column-gap: var(--s4);
+  row-gap: var(--s4);
+}
+
+.fact { display: contents; }
+
+.fact__label {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--text-3);
+  font-size: var(--fs-small);
+  white-space: nowrap;
+}
+
+.glyph {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--text-3);
+  opacity: 0.75;
+  transform: translateY(0.5px);
+}
+
+/* Values start where the label column ends, so they read down as one column. */
+.fact__value {
+  font-size: var(--fs-body);
+  font-weight: 560;
+  font-variant-numeric: tabular-nums;
+}
+.fact__value--good { color: var(--none); }
+.fact__value--flag { color: var(--high); }
+
+.fact__aside {
+  margin-left: var(--s2);
+  font-weight: 400;
+  font-size: var(--fs-small);
+  color: var(--text-3);
+}
 
 /* --- stats ---------------------------------------------------------------- */
 
@@ -336,30 +498,37 @@ code {
 /* --- disclosure ----------------------------------------------------------- */
 
 .disclosure {
-  border: 1px solid var(--line);
+  border: 1px solid transparent;
   border-radius: var(--r);
-  background: var(--bg);
   overflow: hidden;
-  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.disclosure + .disclosure { margin-top: var(--s2); }
-.disclosure[data-open="true"] { border-color: var(--line-strong); box-shadow: var(--shadow-sm); }
-.disclosure[data-tone="high"] { border-color: color-mix(in srgb, var(--high) 30%, var(--line)); }
-.disclosure[data-tone="medium"] { border-color: color-mix(in srgb, var(--medium) 26%, var(--line)); }
+.disclosure + .disclosure {
+  border-top: 1px solid var(--line-soft);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.disclosure[data-open="true"] {
+  background: var(--surface);
+  border-color: transparent;
+  border-top-color: transparent;
+  margin: var(--s2) 0;
+}
+.disclosure[data-open="true"] + .disclosure { border-top-color: transparent; }
 
 .disclosure__summary {
   display: flex;
   align-items: center;
   gap: var(--s2);
   width: 100%;
-  padding: var(--s3);
+  padding: var(--s3) var(--s2);
   background: none;
   border: 0;
   cursor: pointer;
   text-align: left;
   transition: background var(--dur) var(--ease);
 }
-.disclosure__summary:hover { background: var(--surface); }
+.disclosure__summary:hover .disclosure__name { color: var(--accent); }
 .disclosure__summary:focus-visible { outline-offset: -3px; }
 
 .disclosure__chevron {
@@ -448,11 +617,11 @@ code {
 .muted { font-size: var(--fs-small); color: var(--text-2); line-height: 1.55; }
 
 .callout {
-  margin-top: var(--s3);
-  padding: var(--s3);
-  border-radius: var(--r-sm);
+  margin-top: var(--s4);
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r);
   font-size: var(--fs-small);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 .callout--warn { background: var(--warn-wash); color: var(--warn); }
 .callout--ok { background: var(--ok-wash); color: var(--ok); }
@@ -461,15 +630,17 @@ code {
 
 .finding {
   border-radius: var(--r);
-  padding: var(--s3);
+  padding: var(--s4);
   font-size: var(--fs-small);
-  line-height: 1.55;
-  border: 1px solid transparent;
+  line-height: 1.6;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
 }
 .finding + .finding { margin-top: var(--s2); }
-.finding--discrepancy { background: var(--warn-wash); border-color: color-mix(in srgb, var(--warn) 18%, transparent); }
-.finding--note { background: var(--note-wash); border-color: color-mix(in srgb, var(--note) 18%, transparent); }
-.finding--aligned { background: var(--surface); border-color: var(--line-soft); }
+.finding--discrepancy { border-left-color: var(--warn); }
+.finding--note { border-left-color: var(--note); }
+.finding--aligned { border-left-color: var(--none); }
 
 .finding__badge {
   display: block;
@@ -496,11 +667,11 @@ code {
 
 /* --- policy stances ------------------------------------------------------- */
 
-.stances { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-bottom: var(--s3); }
-.stance { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: var(--s2) var(--s3); }
+.stances { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-bottom: var(--s4); }
+.stance { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r); padding: var(--s3); }
 .stance__label { display: block; font-size: var(--fs-label); color: var(--text-3); }
 .stance__value { display: block; margin-top: 2px; font-size: var(--fs-body); font-weight: 620; }
-.stance[data-tone="warn"] { background: var(--warn-wash); border-color: transparent; }
+.stance[data-tone="warn"] { border-color: color-mix(in srgb, var(--warn) 25%, var(--line-soft)); }
 .stance[data-tone="warn"] .stance__value { color: var(--warn); }
 .stance[data-tone="ok"] .stance__value { color: var(--ok); }
 .stance[data-tone="unknown"] .stance__value { color: var(--text-3); }
@@ -660,26 +831,43 @@ code {
 
 body.page { background: var(--sunken); }
 
-.shell { max-width: 780px; margin: 0 auto; padding: var(--s8) var(--s6) 96px; }
-.shell__title { font-size: var(--fs-display); font-weight: 680; letter-spacing: -0.03em; }
-.shell__sub { margin-top: var(--s3); font-size: var(--fs-lead); line-height: 1.6; color: var(--text-2); }
+.shell { max-width: 760px; margin: 0 auto; padding: var(--s8) var(--s6) 96px; }
+.shell__title { font-size: var(--fs-display); font-weight: 620; letter-spacing: -0.03em; }
+.shell__sub {
+  margin-top: var(--s4);
+  font-size: var(--fs-lead);
+  line-height: 1.65;
+  color: var(--text-2);
+  max-width: 62ch;
+}
 
 .card {
   background: var(--bg);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--r-lg);
-  padding: var(--s6);
-  margin-top: var(--s5);
-  box-shadow: var(--shadow-sm);
+  padding: var(--s7);
+  margin-top: var(--s6);
 }
-.card__title { font-size: var(--fs-lead); font-weight: 640; letter-spacing: -0.01em; margin-bottom: 6px; }
-.card__body { font-size: var(--fs-body); line-height: 1.65; color: var(--text-2); }
+.card__title {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--s3);
+}
+.card__body { font-size: var(--fs-body); line-height: 1.7; color: var(--text-2); max-width: 62ch; }
 
-.toggle-row { display: flex; align-items: flex-start; gap: var(--s4); padding: var(--s4) 0; border-bottom: 1px solid var(--line-soft); }
+/* A setting is a labelled row, the same shape as a fact in the panel. */
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s5);
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
 .toggle-row:last-child { border-bottom: 0; padding-bottom: 0; }
-.toggle-row__text { flex: 1; }
+.toggle-row__text { flex: 1; max-width: 58ch; }
 .toggle-row__name { font-size: var(--fs-body); font-weight: 570; }
-.toggle-row__hint { font-size: var(--fs-small); color: var(--text-2); margin-top: 3px; line-height: 1.55; }
+.toggle-row__hint { font-size: var(--fs-small); color: var(--text-3); margin-top: var(--s2); line-height: 1.6; }
 
 .switch {
   position: relative;
@@ -734,3 +922,79 @@ body.page { background: var(--sunken); }
 
 .disclosure__sub { font-weight: 450; color: var(--text-3); }
 .dimensions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+
+/* --- a list of mutually exclusive choices, each explaining itself ---------- */
+
+.choices { display: flex; flex-direction: column; margin-top: var(--s3); }
+
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: none;
+  padding: var(--s4) 0 var(--s4) var(--s6);
+  cursor: pointer;
+  position: relative;
+  font: inherit;
+  color: inherit;
+}
+.choice::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(var(--s4) + 2px);
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+}
+.choice[aria-checked="true"]::before { border: 4.5px solid var(--accent); }
+.choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+
+.choice__name { display: block; font-size: var(--fs-body); font-weight: 560; }
+.choice__hint { display: block; margin-top: var(--s2); font-size: var(--fs-small); color: var(--text-3); line-height: 1.6; max-width: 58ch; }
+
+/* ==========================================================================
+   7. Room
+   --------------------------------------------------------------------------
+   A side panel is whatever width the person dragged it to. Everything above is
+   written for the narrow end; these rules spend the extra room when there is
+   some, rather than stretching the compact layout across it.
+   ========================================================================== */
+
+@container panel (min-width: 440px) {
+  .header { padding: var(--s8) var(--s6) var(--s6); }
+  .section { padding: var(--s6); }
+
+  /* Labels get a column of their own, so every value starts at the same place. */
+  .facts { grid-template-columns: 190px 1fr; row-gap: var(--s5); }
+
+  /* Prose stops at a comfortable measure instead of running the full width. */
+  .header__headline,
+  .statement__text,
+  .finding__says,
+  .finding__observed,
+  .finding__why,
+  .harvest__line,
+  .harvest__quiet,
+  .callout { max-width: 62ch; }
+
+  .harvest__row { padding: var(--s5); }
+  .finding { padding: var(--s5); }
+  .disclosure__summary { padding: var(--s4) var(--s3); }
+}
+
+@container panel (min-width: 560px) {
+  .header { padding: var(--s8) var(--s7) var(--s6); }
+  .section { padding: var(--s6) var(--s7); }
+  .facts { grid-template-columns: 240px 1fr; }
+  .stances { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Below that, the segment bars only repeat what the pill already says in
+   words, and they crowd the row they sit in. The word is the one that stays. */
+@container panel (max-width: 439px) {
+  .segments { display: none; }
+}

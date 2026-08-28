@@ -1,5 +1,27 @@
 /** User-facing wording. Kept in one place so the product speaks with one voice. */
-import type { Category, Confidence, DataType, Dimension, ExposureLevel, Provenance } from '../domain/types';
+import type {
+  Category,
+  Confidence,
+  DataType,
+  Dimension,
+  ExposureLevel,
+  HarvestField,
+  Provenance,
+} from '../domain/types';
+
+export const HARVEST_FIELD_LABELS: Record<HarvestField, string> = {
+  email: 'email',
+  phone: 'phone',
+  'first-name': 'first name',
+  'last-name': 'last name',
+  city: 'city',
+  state: 'state',
+  postcode: 'postcode',
+  gender: 'gender',
+  'date-of-birth': 'date of birth',
+  country: 'country',
+  'site-id': 'an ID this site holds for you',
+};
 
 export const DATA_TYPE_LABELS: Record<DataType, string> = {
   'pages-visited': 'The pages you visit here',
