@@ -129,6 +129,10 @@ async function captureExtension() {
     // Ask a question so the answer is real streamed output, not a placeholder.
     await popup.locator('.ask__chip').first().click();
     await popup.waitForFunction(() => document.querySelector('.ask__answer')?.textContent?.includes('work.'));
+  // The answer fades in and the Ask button is disabled while it streams, so
+  // capturing on the last word catches both mid-state.
+  await popup.locator('.ask__send:not(:disabled)').waitFor({ timeout: 10_000 }).catch(() => {});
+  await popup.waitForTimeout(700);
     await popup.locator('.section', { hasText: 'Ask Veyl' }).screenshot({ path: `${SHOTS}/ask.png` });
     await popup.locator('.section', { hasText: 'Ask Veyl' }).screenshot({ path: `${GUIDE}/ask.png` });
 
